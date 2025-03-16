@@ -1,5 +1,15 @@
+import { Firestore } from "@firebase/firestore";
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, Auth } from "firebase/auth";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  createUserWithEmailAndPassword,
+  Auth,
+} from "firebase/auth";
+import { Database, getDatabase } from "firebase/database";
 
 // const firebaseConfig = {
 //   apiKey: process.env.apiKey,
@@ -24,14 +34,34 @@ const firebaseConfig = {
 
 // firebase.initializeApp(firebaseConfig);
 let app: FirebaseApp;
+let db: Database;
 let auth: Auth;
 // Initialize Firebase only if it hasn't been initialized before
 if (typeof window !== "undefined" && !getApps().length) {
-  app = initializeApp(firebaseConfig);
+  // app = initializeApp(firebaseConfig);
+  // db = getFirestore(app);
   // Use Firebase Auth service
+
+  // Initialize Firebase
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
   auth = getAuth(app);
 } else {
   app = getApps()[0]; // Get the already initialized app
 }
+export const provider = new GoogleAuthProvider();
 
-export { auth, createUserWithEmailAndPassword };
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in: ", error);
+  }
+};
+
+export const logout = async () => {
+  await signOut(auth);
+};
+
+export { auth, collection, createUserWithEmailAndPassword, db, addDoc };
