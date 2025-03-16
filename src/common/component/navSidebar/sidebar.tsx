@@ -1,14 +1,24 @@
 import { useEffect, useState } from "react";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { RightPanel } from "./RightPanel";
-import { Box, Typography } from "@mui/material";
-import { auth } from "@/config/firebase";
+import {
+  Box,
+  Typography,
+  IconButton,
+  Drawer,
+  Button,
+  Avatar,
+} from "@mui/material";
+import { auth, logout } from "@/config/firebase";
 import { getUserData } from "@/common/constant";
 import { User } from "firebase/auth";
+import PartyDetailsPage from "@/pages/party/PartyDetailsPage";
+import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
 
 const navLinks = [
-  { name: "Bill", href: "/Expense" },
+  { name: "Wallet", href: "/Expense" },
   { name: "Party", href: "/Party" },
   { name: "Account", href: "/Account" },
   { name: "Truck", href: "/Truck" },
@@ -19,88 +29,162 @@ const navLinks = [
 
 export default function SideNavBar() {
   const [selectedPage, setSelectedPage] = useState<number>(0);
-  const [userData, setUserData] = useState<User | null>();
+  const [userData, setUserData] = useState<User | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Sidebar open by default on desktop
 
   useEffect(() => {
-    if (auth?.currentUser) {
-      setUserData(getUserData());
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUserData(user ? getUserData() : null);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handlePageChange = (index: number) => {
+    if (selectedPage !== index) {
+      setSelectedPage(index);
+      setIsMenuOpen(false); // Close sidebar on selection
     }
-  }, [auth]);
+  };
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      {/* Title Bar with Menu Icon */}
       <Box
         sx={{
-          width: 120,
-          height: 1000,
-          flexShrink: 0,
           display: "flex",
-          paddingTop: 10,
-          position: "fixed",
-          backgroundColor: "gray",
-          flexDirection: "column",
-          "& .MuiDrawer-paper": {
-            width: 140,
-            boxSizing: "border-box",
-            borderColor: "black",
-            backgroundColor: "black", // Set the background color to black
-            color: "white",
-            textAlign: "center",
-            alignItems: "center",
-          },
+          alignItems: "center",
+          backgroundColor: "black",
+          color: "white",
+          padding: "10px 20px",
+          gap: 2,
         }}
       >
-        <AccountCircleIcon
-          sx={{ width: 80, height: 80, marginLeft: "20px", marginTop: "-40px" }}
-        />
-        <Typography
-          sx={{
-            width: 80,
-            marginLeft: "20px",
-            marginBottom: "10px",
-            textAlign: "center",
-          }}
+        <IconButton
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          sx={{ color: "white" }}
         >
-          {userData?.displayName}
+          <MenuIcon fontSize="large" />
+        </IconButton>
+        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold" }}>
+          vTrans Dashboard
         </Typography>
-        {navLinks.map((link, index) => (
-          <Box
-            key={index} // Add a unique key for each item
-            onClick={() => setSelectedPage(index)}
-            sx={{
-              cursor: "pointer", // Added a cursor to indicate it's clickable
-              padding: "8px",
-              marginLeft: "16px",
-              backgroundColor: selectedPage === index ? "black" : "gray",
-              color: selectedPage === index ? "White" : "black",
-            }}
-          >
-            {link.name}
-          </Box>
-        ))}
       </Box>
-      <Box sx={{ flexGrow: 1, padding: "16px" }}>
+
+      {/* Sidebar - Responsive */}
+      <Drawer
+        anchor="left"
+        open={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: "80%", // Adjust width for mobile
+            maxWidth: "250px", // Prevent too much width
+            marginTop: 0, // Remove extra margin
+          },
+        }}
+        variant="persistent"
+      >
+        <IconButton
+          onClick={() => setIsMenuOpen(false)}
+          sx={{ alignSelf: "flex-end", margin: 1 }}
+        >
+          <CloseIcon />
+        </IconButton>
+        <SidebarContent
+          userData={userData}
+          handlePageChange={handlePageChange}
+        />
+      </Drawer>
+
+      {/* Main Content */}
+      <Box sx={{ flexGrow: 1, padding: { xs: "8px", sm: "16px" } }}>
         {(() => {
           switch (selectedPage) {
             case 0:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return (
+                <RightPanel>
+                  <ExpenseDetailsPage uid={userData?.uid ?? ""} />
+                </RightPanel>
+              );
             case 1:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return (
+                <RightPanel>
+                  <PartyDetailsPage />
+                </RightPanel>
+              );
             case 2:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return <RightPanel>Account</RightPanel>;
             case 3:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return <RightPanel>Truck</RightPanel>;
             case 4:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return <RightPanel>Expense</RightPanel>;
             case 5:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return <RightPanel>About</RightPanel>;
             case 6:
-              return <RightPanel>Page {selectedPage}</RightPanel>;
+              return <RightPanel>Contact</RightPanel>;
             default:
-              return <RightPanel>default Page</RightPanel>;
+              return <RightPanel>Default Page</RightPanel>;
           }
         })()}
       </Box>
     </Box>
   );
 }
+
+// Sidebar Content Component
+const SidebarContent = ({
+  userData,
+  handlePageChange,
+}: {
+  userData: User | null;
+  handlePageChange: (index: number) => void;
+}) => {
+  return (
+    <Box sx={{ textAlign: "center", width: "100%", paddingX: 2 }}>
+      {/* Profile Section */}
+      <Avatar
+        src={userData?.photoURL || "https://via.placeholder.com/50"} // Default image
+        alt="Profile"
+        sx={{
+          width: 60,
+          height: 60,
+          margin: "10px auto",
+          border: "2px solid white",
+          boxShadow: 2,
+        }}
+      />
+      <Typography sx={{ fontWeight: "bold", marginBottom: "10px" }}>
+        {userData?.displayName || "Guest User"}
+      </Typography>
+
+      {/* Navigation Links */}
+      {navLinks.map((link, index) => (
+        <Box
+          key={index}
+          onClick={() => handlePageChange(index)}
+          sx={{
+            cursor: "pointer",
+            padding: "10px",
+            textAlign: "center",
+            backgroundColor: "Gainsboro",
+            "&:hover": { backgroundColor: "lightgray" },
+          }}
+        >
+          <Typography>{link.name}</Typography>
+        </Box>
+      ))}
+
+      {/* Logout Button with Icon */}
+      <Button
+        onClick={logout}
+        variant="contained"
+        color="error"
+        startIcon={<LogoutIcon />}
+        fullWidth
+        sx={{ marginBottom: 2, marginTop: 2 }}
+      >
+        Logout
+      </Button>
+    </Box>
+  );
+};
