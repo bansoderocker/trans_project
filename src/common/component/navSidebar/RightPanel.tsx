@@ -7,7 +7,15 @@ interface RightPanelProps {
 
 export const RightPanel: React.FC<RightPanelProps> = ({ children }) => {
   return (
-    <Box sx={{ width: "100%", paddingLeft: 20 }}>
+    <Box
+      sx={{
+        // width: "100%",
+        display: "flex",
+        // justifyContent: "center", // Centers content horizontally
+        alignItems: "center", // Centers content vertically if needed
+        // minHeight: "100vh", // Optional: makes sure it takes full height
+      }}
+    >
       <Typography sx={{ background: "black", color: "white" }}></Typography>
       {children}
     </Box>
