@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { ref, get, push, update, remove } from "firebase/database";
 import { db } from "../../config/firebase";
 import {
@@ -70,9 +70,12 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     setExpenseDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleToggleChange = (_: any, newValue: "Debit" | "Credit") => {
-    if (newValue !== null) {
-      setExpenseDetails((prev) => ({ ...prev, debitCredit: newValue }));
+  const handleToggleChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    _newValue: "Debit" | "Credit"
+  ) => {
+    if (_newValue !== null) {
+      setExpenseDetails((prev) => ({ ...prev, debitCredit: _newValue }));
     }
   };
 
@@ -127,9 +130,6 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     0
   );
 
-  useEffect(() => {
-    fetchExpenses();
-  }, []);
   return (
     <Container>
       <Typography variant="h4">Expense Details</Typography>

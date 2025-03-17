@@ -1,7 +1,7 @@
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import React, { useState } from "react";
 import { authUser } from "@/model/auth/user";
-import { useFirebaseAuth } from "@/hook/auth/useFirebaseAuth";
+// import { useFirebaseAuth } from "@/hook/auth/useFirebaseAuth";
 
 const Auth = () => {
   const [input, setInput] = useState<authUser>({
@@ -20,7 +20,7 @@ const Auth = () => {
       [name]: value,
     }));
   };
-  const response = useFirebaseAuth(input, isLogin, isSubmit);
+  // const response = useFirebaseAuth(input, isLogin, isSubmit);
   const handleSubmit = async () => {
     console.log("handleSubmit", isSubmit);
     setIsSubmit(!isSubmit);
@@ -87,7 +87,7 @@ const Auth = () => {
           {isLogin ? "Register" : "Sign In"}
         </a>
       </p>
-      {response && <h2>{response}</h2>}
+      {/* {response && <h2>{response}</h2>} */}
     </div>
   );
 };
