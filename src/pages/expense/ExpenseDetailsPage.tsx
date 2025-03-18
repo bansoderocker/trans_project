@@ -1,5 +1,12 @@
-import { useState, ChangeEvent, FormEvent } from "react";
-import { ref, get, push, update, remove } from "firebase/database";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import {
+  ref,
+  get,
+  push,
+  update,
+  remove,
+  DatabaseReference,
+} from "firebase/database";
 import { db } from "../../config/firebase";
 import {
   TextField,
@@ -46,19 +53,31 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
-  const refPath = `wallet/${uid}/expenses`;
-  const expenseRef = ref(db, refPath);
+  const [refPath, setRefPath] = useState<string>("wallet/expenses");
+  const [expenseRef, setExpenseRef] = useState<DatabaseReference>();
+  useEffect(() => {
+    if (typeof window !== "undefined" && uid) {
+      setRefPath(`wallet/${uid}/expenses`);
+    }
+    if (!db) {
+      console.error("Firebase database is not initialized.");
+      return;
+    }
+    setExpenseRef(ref(db, refPath));
+  }, [uid]);
 
   const fetchExpenses = async () => {
     try {
-      const snapshot = await get(expenseRef);
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const expensesArray = Object.keys(data).map((key) => ({
-          id: key,
-          ...data[key],
-        }));
-        setAllExpenses(expensesArray);
+      if (expenseRef) {
+        const snapshot = await get(expenseRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const expensesArray = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+          setAllExpenses(expensesArray);
+        }
       }
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -86,23 +105,25 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     setSuccessMessage(null);
 
     try {
-      if (editId) {
-        await update(ref(db, `${refPath}/${editId}`), expenseDetails);
-        setSuccessMessage("Expense updated successfully!");
-      } else {
-        await push(expenseRef, expenseDetails);
-        setSuccessMessage("Expense added successfully!");
+      if (expenseRef) {
+        if (editId) {
+          await update(ref(db, `${refPath}/${editId}`), expenseDetails);
+          setSuccessMessage("Expense updated successfully!");
+        } else {
+          await push(expenseRef, expenseDetails);
+          setSuccessMessage("Expense added successfully!");
+        }
+        fetchExpenses();
+        setExpenseDetails({
+          date: new Date().toISOString().split("T")[0],
+          expense: "",
+          expenseType: "",
+          debitCredit: "Debit",
+          paymentAmount: 0,
+          paymentMode: "",
+        });
+        setEditId(null);
       }
-      fetchExpenses();
-      setExpenseDetails({
-        date: new Date().toISOString().split("T")[0],
-        expense: "",
-        expenseType: "",
-        debitCredit: "Debit",
-        paymentAmount: 0,
-        paymentMode: "",
-      });
-      setEditId(null);
     } catch (e) {
       setError("Error saving expense: " + e);
     } finally {
@@ -117,9 +138,11 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
 
   const handleDelete = async (id: string) => {
     try {
-      await remove(ref(db, `${refPath}/${id}`));
-      fetchExpenses();
-      setSuccessMessage("Expense deleted successfully!");
+      if (expenseRef) {
+        await remove(ref(db, `${refPath}/${id}`));
+        fetchExpenses();
+        setSuccessMessage("Expense deleted successfully!");
+      }
     } catch (error) {
       setError("Error deleting expense: " + error);
     }
