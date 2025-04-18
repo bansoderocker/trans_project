@@ -40,3 +40,11 @@ a {
     color-scheme: dark;
   }
 }
+
+.datepicker-zindex {
+  z-index: 1050 !important; /* Ensure it appears above other elements */
+}
+
+.react-datepicker-popper {
+  z-index: 1050 !important; /* Ensure the popper has a high z-index */
+}

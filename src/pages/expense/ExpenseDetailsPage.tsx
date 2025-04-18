@@ -27,10 +27,11 @@ import {
   ToggleButton,
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
-
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 interface Expense {
   id?: string;
-  date: string;
+  date: Date;
   expense: string;
   expenseType: string;
   debitCredit: "Debit" | "Credit";
@@ -40,7 +41,7 @@ interface Expense {
 
 function ExpenseDetailsPage({ uid }: { uid: string }) {
   const [expenseDetails, setExpenseDetails] = useState<Expense>({
-    date: new Date().toISOString().split("T")[0],
+    date: new Date(),
     expense: "",
     expenseType: "",
     debitCredit: "Debit",
@@ -64,7 +65,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
       return;
     }
     setExpenseRef(ref(db, refPath));
-  }, [uid]);
+  }, [uid, refPath]);
 
   const fetchExpenses = async () => {
     try {
@@ -115,7 +116,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
         }
         fetchExpenses();
         setExpenseDetails({
-          date: new Date().toISOString().split("T")[0],
+          date: new Date(),
           expense: "",
           expenseType: "",
           debitCredit: "Debit",
@@ -153,20 +154,42 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     0
   );
 
+  // Utility function to format date to dd/mm/yyyy
+  // const formatDateToDDMMYYYY = (date: string): string => {
+  //   const [year, month, day] = date.split("-");
+  //   return `${day}/${month}/${year}`;
+  // };
+
+  // const formatDateToYYYYMMDD = (date: string): string => {
+  //   const [day, month, year] = date.split("/");
+  //   return `${year}-${month}-${day}`;
+  // };
   return (
     <Container>
       <Typography variant="h4">Expense Details</Typography>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-            <TextField
-              label="Date"
-              name="date"
-              type="date"
-              value={expenseDetails.date}
-              onChange={handleInputChange}
-              fullWidth
-              required
+
+
+            <ReactDatePicker
+              selected={new Date(expenseDetails.date)} // Convert the date string to a Date object
+              onChange={(date: Date | null) => {
+                const temoraryDate = date ? date : new Date();
+                setExpenseDetails((prev) => ({ ...prev, date: temoraryDate }));
+              }}
+              dateFormat="dd/MM/yyyy" // Display format
+              popperClassName="datepicker-zindex" // Custom class for z-index
+              
+              customInput={
+                <TextField
+                  label="Date"
+                  name="date"
+                  fullWidth
+                  required
+                  variant="outlined"
+                />
+              }
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -249,7 +272,9 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
           <TableBody>
             {allExpenses.map((expense) => (
               <TableRow key={expense.id}>
-                <TableCell>{expense.date}</TableCell>
+                <TableCell>
+                  {new Date(expense.date).toLocaleDateString()}
+                </TableCell>
                 <TableCell>{expense.expense}</TableCell>
                 <TableCell>{expense.expenseType}</TableCell>
                 <TableCell>₹{expense.paymentAmount}</TableCell>
