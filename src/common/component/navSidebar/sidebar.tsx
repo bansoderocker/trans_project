@@ -12,16 +12,18 @@ import {
   Avatar,
 } from "@mui/material";
 import { auth, logout } from "@/config/firebase";
-import { getUserData } from "@/common/constant";
 import { User } from "firebase/auth";
 import PartyDetailsPage from "@/pages/party/PartyDetailsPage";
 import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
+import BillEntryPage from "@/pages/billEntry/BillEntryPage";
+import MasterForm from "@/pages/master/TruckEntryPage";
+import { getUserData } from "@/common/constant/constant";
 
 const navLinks = [
   { name: "Wallet", href: "/Expense" },
   { name: "Party", href: "/Party" },
-  { name: "Account", href: "/Account" },
-  { name: "Truck", href: "/Truck" },
+  { name: "Bill Entry", href: "/Account" },
+  { name: "Master", href: "/Truck" },
   { name: "Expense", href: "/ExpenseType" },
   { name: "About", href: "/About" },
   { name: "Contact", href: "/Contact" },
@@ -113,9 +115,17 @@ export default function SideNavBar() {
                 </RightPanel>
               );
             case 2:
-              return <RightPanel>Account</RightPanel>;
+              return (
+                <RightPanel>
+                  <BillEntryPage uid={userData?.uid ?? ""} />
+                </RightPanel>
+              );
             case 3:
-              return <RightPanel>Truck</RightPanel>;
+              return (
+                <RightPanel>
+                  <MasterForm uid={userData?.uid ?? ""} />
+                </RightPanel>
+              );
             case 4:
               return <RightPanel>Expense</RightPanel>;
             case 5:
