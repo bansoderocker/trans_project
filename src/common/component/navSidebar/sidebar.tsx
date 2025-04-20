@@ -16,15 +16,15 @@ import { User } from "firebase/auth";
 import PartyDetailsPage from "@/pages/party/PartyDetailsPage";
 import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
 import BillEntryPage from "@/pages/billEntry/BillEntryPage";
-import MasterForm from "@/pages/master/TruckEntryPage";
+import MasterForm from "@/pages/master/MasterEntryPage";
 import { getUserData } from "@/common/constant/constant";
 
 const navLinks = [
-  { name: "Wallet", href: "/Expense" },
-  { name: "Party", href: "/Party" },
   { name: "Bill Entry", href: "/Account" },
+  { name: "Party", href: "/Party" },
   { name: "Master", href: "/Truck" },
   { name: "Expense", href: "/ExpenseType" },
+  { name: "Wallet", href: "/Expense" },
   { name: "About", href: "/About" },
   { name: "Contact", href: "/Contact" },
 ];
@@ -105,9 +105,10 @@ export default function SideNavBar() {
             case 0:
               return (
                 <RightPanel>
-                  <ExpenseDetailsPage uid={userData?.uid ?? ""} />
+                  <BillEntryPage uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
+
             case 1:
               return (
                 <RightPanel>
@@ -117,13 +118,14 @@ export default function SideNavBar() {
             case 2:
               return (
                 <RightPanel>
-                  <BillEntryPage uid={userData?.uid ?? ""} />
+                  <MasterForm uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
+
             case 3:
               return (
                 <RightPanel>
-                  <MasterForm uid={userData?.uid ?? ""} />
+                  <ExpenseDetailsPage uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
             case 4:
