@@ -92,7 +92,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
 
   const handleToggleChange = (
     _event: React.MouseEvent<HTMLElement>,
-    _newValue: "Debit" | "Credit"
+    _newValue: "Debit" | "Credit",
   ) => {
     if (_newValue !== null) {
       setExpenseDetails((prev) => ({ ...prev, debitCredit: _newValue }));
@@ -151,7 +151,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
 
   const totalExpense = allExpenses.reduce(
     (sum, item) => sum + Number(item.paymentAmount),
-    0
+    0,
   );
 
   // Utility function to format date to dd/mm/yyyy
@@ -170,8 +170,6 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-
-
             <ReactDatePicker
               selected={new Date(expenseDetails.date)} // Convert the date string to a Date object
               onChange={(date: Date | null) => {
@@ -180,7 +178,6 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
               }}
               dateFormat="dd/MM/yyyy" // Display format
               popperClassName="datepicker-zindex" // Custom class for z-index
-              
               customInput={
                 <TextField
                   label="Date"

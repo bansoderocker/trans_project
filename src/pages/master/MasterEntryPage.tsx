@@ -42,6 +42,7 @@ const masterTypes = [
   { value: "truck", label: "Truck" },
   { value: "location", label: "Location" },
   { value: "expenseType", label: "Expense Type" },
+  { value: "proprietor", label: "Proprietor" },
 ];
 
 function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
