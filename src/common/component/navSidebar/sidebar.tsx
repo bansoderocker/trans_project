@@ -21,7 +21,7 @@ import { getUserData } from "@/common/constant/constant";
 
 const navLinks = [
   { name: "Bill Entry", href: "/Account" },
-  { name: "Party", href: "/Party" },
+  // { name: "Party", href: "/Party" },
   { name: "Master", href: "/Truck" },
   { name: "Expense", href: "/ExpenseType" },
   { name: "Wallet", href: "/Expense" },
@@ -112,27 +112,21 @@ export default function SideNavBar() {
             case 1:
               return (
                 <RightPanel>
-                  <PartyDetailsPage />
-                </RightPanel>
-              );
-            case 2:
-              return (
-                <RightPanel>
                   <MasterForm uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
 
-            case 3:
+            case 2:
               return (
                 <RightPanel>
                   <ExpenseDetailsPage uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
-            case 4:
+            case 3:
               return <RightPanel>Expense</RightPanel>;
-            case 5:
+            case 4:
               return <RightPanel>About</RightPanel>;
-            case 6:
+            case 5:
               return <RightPanel>Contact</RightPanel>;
             default:
               return <RightPanel>Default Page</RightPanel>;
