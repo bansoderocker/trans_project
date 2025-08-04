@@ -23,6 +23,7 @@ import {
   remove,
   update,
   DatabaseReference,
+  child,
 } from "firebase/database";
 import { Edit, Delete } from "@mui/icons-material";
 
@@ -45,8 +46,18 @@ const masterTypes = [
   { value: "proprietor", label: "Proprietor" },
 ];
 
+interface MasterFormData {
+  name: string;
+  type: string;
+  createdBy?: string;
+  key?: string;
+}
+
 function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
-  const [formData, setFormData] = useState({ name: "", type: "" });
+  const [formData, setFormData] = useState<MasterFormData>({
+    name: "",
+    type: "",
+  });
   const [entries, setEntries] = useState<MasterEntry[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +65,7 @@ function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
   const [masterRef, setMasterRef] = useState<DatabaseReference>();
 
   useEffect(() => {
-    const refPath = `wallet/${uid}/masters`;
+    const refPath = `wallet/masters`;
     setMasterRef(ref(db, refPath));
   }, [uid]);
 
@@ -95,9 +106,10 @@ function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
     try {
       if (masterRef) {
         if (editId) {
-          await update(ref(db, `${masterRef.toString()}/${editId}`), formData);
+          await update(child(masterRef, editId), formData);
           setSuccessMessage("Entry updated successfully");
         } else {
+          formData.createdBy = uid;
           await push(masterRef, formData);
           setSuccessMessage("Entry added successfully");
         }
@@ -117,7 +129,7 @@ function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
 
   const handleDelete = async (entryId: string) => {
     try {
-      const entryRef = ref(db, `wallet/${uid}/masters/${entryId}`);
+      const entryRef = ref(db, `wallet/masters/${entryId}`);
       await remove(entryRef); // This will remove the entry from the database
       console.log("Entry deleted successfully");
       fetchEntries();

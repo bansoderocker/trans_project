@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import "react-datepicker/dist/react-datepicker.css";
 interface Expense {
   id?: string;
   date: Date;
@@ -58,7 +58,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
   const [expenseRef, setExpenseRef] = useState<DatabaseReference>();
   useEffect(() => {
     if (typeof window !== "undefined" && uid) {
-      setRefPath(`wallet/${uid}/expenses`);
+      setRefPath(`wallet/expenses`);
     }
     if (!db) {
       console.error("Firebase database is not initialized.");
@@ -92,7 +92,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
 
   const handleToggleChange = (
     _event: React.MouseEvent<HTMLElement>,
-    _newValue: "Debit" | "Credit",
+    _newValue: "Debit" | "Credit"
   ) => {
     if (_newValue !== null) {
       setExpenseDetails((prev) => ({ ...prev, debitCredit: _newValue }));
@@ -151,7 +151,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
 
   const totalExpense = allExpenses.reduce(
     (sum, item) => sum + Number(item.paymentAmount),
-    0,
+    0
   );
 
   // Utility function to format date to dd/mm/yyyy
