@@ -14,5 +14,11 @@ export interface Bill {
 
 export interface MasterEntry {
   name: string;
-  type: "truck" | "party" | "location" | "expense" | "proprietor";
+  type: "truck" | "party" | "location" | "expenseType" | "proprietor";
+}
+
+export interface addEditExpenseDetails {
+  id: number;
+  expenseType: string;
+  expenseValue: string | number;
 }

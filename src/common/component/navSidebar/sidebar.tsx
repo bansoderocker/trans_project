@@ -13,20 +13,21 @@ import {
 } from "@mui/material";
 import { auth, logout } from "@/config/firebase";
 import { User } from "firebase/auth";
-import PartyDetailsPage from "@/pages/party/PartyDetailsPage";
 import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
 import BillEntryPage from "@/pages/billEntry/BillEntryPage";
 import MasterForm from "@/pages/master/MasterEntryPage";
 import { getUserData } from "@/common/constant/constant";
+import BillEntryListTable from "@/pages/bill/billEntryListView";
 
-const navLinks = [
-  { name: "Bill Entry", href: "/Account" },
-  { name: "Party", href: "/Party" },
-  { name: "Master", href: "/Truck" },
-  { name: "Expense", href: "/ExpenseType" },
-  { name: "Wallet", href: "/Expense" },
-  { name: "About", href: "/About" },
-  { name: "Contact", href: "/Contact" },
+const pageNames = [
+  // { name: "Dashboard" },
+  { name: "Bill" },
+  { name: "Daily Entry" },
+  { name: "Master" },
+  { name: "Expense" },
+  { name: "Wallet" },
+  { name: "About" },
+  { name: "Contact" },
 ];
 
 export default function SideNavBar() {
@@ -40,7 +41,6 @@ export default function SideNavBar() {
     });
     return () => unsubscribe();
   }, []);
-
   const handlePageChange = (index: number) => {
     if (selectedPage !== index) {
       setSelectedPage(index);
@@ -95,6 +95,7 @@ export default function SideNavBar() {
         <SidebarContent
           userData={userData}
           handlePageChange={handlePageChange}
+          selectedPage={selectedPage}
         />
       </Drawer>
 
@@ -105,16 +106,23 @@ export default function SideNavBar() {
             case 0:
               return (
                 <RightPanel>
-                  <BillEntryPage uid={userData?.uid ?? ""} />
+                  <BillEntryListTable uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
-
+              break;
             case 1:
               return (
                 <RightPanel>
-                  <PartyDetailsPage />
+                  <BillEntryPage uid={userData?.uid ?? ""} />
                 </RightPanel>
               );
+              break;
+            // case 1:
+            //   return (
+            //     <RightPanel>
+            //       <PartyDetailsPage />
+            //     </RightPanel>
+            //   );
             case 2:
               return (
                 <RightPanel>
@@ -147,9 +155,11 @@ export default function SideNavBar() {
 const SidebarContent = ({
   userData,
   handlePageChange,
+  selectedPage,
 }: {
   userData: User | null;
   handlePageChange: (index: number) => void;
+  selectedPage: number;
 }) => {
   return (
     <Box sx={{ textAlign: "center", width: "100%", paddingX: 2 }}>
@@ -170,7 +180,7 @@ const SidebarContent = ({
       </Typography>
 
       {/* Navigation Links */}
-      {navLinks.map((link, index) => (
+      {pageNames.map((link, index) => (
         <Box
           key={index}
           onClick={() => handlePageChange(index)}
@@ -178,8 +188,9 @@ const SidebarContent = ({
             cursor: "pointer",
             padding: "10px",
             textAlign: "center",
-            backgroundColor: "Gainsboro",
-            "&:hover": { backgroundColor: "lightgray" },
+            backgroundColor: selectedPage === index ? "gray" : "Gainsboro",
+            color: selectedPage === index ? "white" : "text.primary",
+            "&:hover": { backgroundColor: "lightgray", color: "black" },
           }}
         >
           <Typography>{link.name}</Typography>

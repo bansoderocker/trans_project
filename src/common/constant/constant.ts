@@ -10,3 +10,7 @@ export const getUserData = () => {
 //   { value: "location", label: "Location" },
 //   { value: "expenseType", label: "Expense Type" },
 // ];
+
+export const vTransApiEndPoint = {
+  getBillList: "getBillList",
+};
