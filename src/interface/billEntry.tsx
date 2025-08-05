@@ -10,6 +10,7 @@ export interface Bill {
   weightCharge: number;
   date: string;
   proprietor: string;
+  displayBillName: string;
 }
 
 export interface MasterEntry {

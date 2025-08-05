@@ -1,8 +1,10 @@
 import { getInitials } from "@/common/util/customLogic";
-import { useBilEntryListData } from "@/hook/bill/useBilEntryListData";
+import { useBilEntryListData } from "@/hook/useBillEntryListData";
 import { Bill } from "@/interface/billEntry";
 import {
   Button,
+  Grid,
+  Paper,
   Table,
   TableBody,
   TableCell,
@@ -11,6 +13,7 @@ import {
   TableSortLabel,
   Typography,
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 interface BillEntryListProps {
@@ -33,18 +36,21 @@ const BillEntryListTable = ({
   const [result, setResult] = useState<Bill[]>();
 
   const data = useBilEntryListData();
-  // const data = [] as Bill[];
   useEffect(() => {
     // const data = useBilEntryListData();
     if (Array.isArray(data)) {
       setResult(data);
+      setTrigger(true);
     } else {
       setResult(undefined);
     }
-  }, [data]);
+  }, [JSON.stringify(data)]);
 
   useEffect(() => {
     if (trigger && Array.isArray(result)) {
+      const data = result.forEach(
+        (v) => (v.displayBillName = getInitials(v.proprietor) +" "+ v.billNo)
+      );
       setAllBills(result);
     }
     setTrigger(false);
@@ -107,103 +113,30 @@ const BillEntryListTable = ({
       setScreenHeight(window.screen.height);
     }
   }, []);
+
+  const columns = [
+    { field: "date", headerName: "Date", width: 100 },
+    { field: "displayBillName", headerName: "Bill Number", width: 200 },
+    { field: "truckNumber", headerName: "Truck Number", width: 120 },
+    { field: "fromLocation", headerName: "From", width: 100 },
+    { field: "toLocation", headerName: "To", width: 100 },
+    { field: "billAmount", headerName: "Bill Amount", width: 100 },
+    { field: "fixedAmount", headerName: "Fixed", width: 100 },
+    { field: "weightCharge", headerName: "Weight", width: 100 },
+    { field: "action", headerName: "Action", width: 100 },
+  ];
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableCell>Date</TableCell>
-          {/* Sorting applied to Bill Number */}
-          <TableCell
-            colSpan={2}
-            sortDirection={orderBy === "billNo" ? order : false}
-          >
-            <TableSortLabel
-              active={orderBy === "billNo"}
-              direction={orderBy === "billNo" ? order : "asc"}
-              onClick={() => handleSort("billNo")}
-            >
-              Bill Number
-            </TableSortLabel>
-          </TableCell>
-
-          <TableCell>Truck</TableCell>
-          <TableCell>From</TableCell>
-          <TableCell>To</TableCell>
-          <TableCell>Amount</TableCell>
-          <TableCell>Fix</TableCell>
-          <TableCell>weight Charge</TableCell>
-          <TableCell>
-            <TableSortLabel
-              direction={orderBy === "partyName" ? order : "asc"}
-              onClick={() => handleSort("partyName")}
-            >
-              Party
-            </TableSortLabel>
-          </TableCell>
-          <TableCell>Actions</TableCell>
-        </TableRow>
-      </TableHead>
-
-      <TableBody>
-        {sortedBills.length > 0 ? (
-          sortedBills.map((bill: Bill) => (
-            <TableRow key={bill.id}>
-              <TableCell sortDirection={orderBy === "date" ? order : false}>
-                {" "}
-                <TableSortLabel
-                  active={orderBy === "date"}
-                  direction={orderBy === "date" ? order : "asc"}
-                  onClick={() => handleSort("date")}
-                >
-                  {bill.date}{" "}
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>{getInitials(bill.proprietor || "")}</TableCell>
-              <TableCell>{bill.billNo}</TableCell>
-              <TableCell>{bill.truckNumber}</TableCell>
-              <TableCell>{bill.fromLocation}</TableCell>
-              <TableCell>{bill.toLocation}</TableCell>
-              <TableCell>{bill.billAmount}</TableCell>
-              <TableCell>{bill.fixedAmount}</TableCell>
-              <TableCell>{bill.weightCharge}</TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "partyName"}
-                  direction={orderBy === "partyName" ? order : "asc"}
-                  onClick={() => handleSort("partyName")}
-                >
-                  {bill.partyName}{" "}
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleEdit(bill)}
-                >
-                  Edit
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell
-              colSpan={11}
-              style={{
-                height: screenHeight - 350, // adjust height as needed
-                textAlign: "center",
-                verticalAlign: "middle",
-              }}
-            >
-              <Typography variant="h6" color="textSecondary">
-                No Record Found
-              </Typography>
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+    <Grid md={12}>
+      <Paper sx={{ height: "100%", width: "100%" }}>
+        <DataGrid
+          rows={allBills}
+          columns={columns}
+          pageSizeOptions={[25, 50, 100]}
+          sx={{ border: 1 }}
+          isRowSelectable={() => false}
+        />
+      </Paper>{" "}
+    </Grid>
   );
 };
 
