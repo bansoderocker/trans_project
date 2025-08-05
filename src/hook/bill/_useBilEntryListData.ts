@@ -2,7 +2,7 @@
 import { Bill } from "@/interface/billEntry";
 import getAxios from "../common/getAxios";
 
-export const useBilEntryListData = async () => {
+export const _useBilEntryListData = async () => {
   //   const vTransApiAxios = process.env.VTRANS_API_BASE_URL;
   //   const { LocalStorage } = require("node-localstorage");
   //   const localStorage = new LocalStorage("./scratch");

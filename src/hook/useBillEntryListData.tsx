@@ -3,8 +3,8 @@ import { Bill } from "@/interface/billEntry";
 import { get, ref } from "firebase/database";
 import { useCallback, useEffect, useState } from "react";
 
-export const useBilEntryListData = ({ uid }: { uid: string }): Bill[] => {
-  const billsRef = ref(db, `wallet/${uid}/bills`);
+export const useBilEntryListData = (): Bill[] => {
+  const billsRef = ref(db, `wallet/bills`);
   const [allBills, setAllBills] = useState<Bill[]>([]);
   const fetchBills = useCallback(async () => {
     try {
@@ -26,7 +26,7 @@ export const useBilEntryListData = ({ uid }: { uid: string }): Bill[] => {
 
   useEffect(() => {
     fetchBills();
-  }, [uid, fetchBills]);
+  }, [fetchBills]);
 
   return allBills;
 };
