@@ -17,7 +17,7 @@ import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
 import BillEntryPage from "@/pages/billEntry/BillEntryPage";
 import MasterForm from "@/pages/master/MasterEntryPage";
 import { getUserData } from "@/common/constant/constant";
-import BillEntryListTable from "@/pages/bill/billEntryListView";
+import BillEntryListTable from "../dailyEntry";
 
 const pageNames = [
   // { name: "Dashboard" },
@@ -37,6 +37,10 @@ export default function SideNavBar() {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        console.warn("No user logged in.");
+        return;
+      }
       setUserData(user ? getUserData() : null);
     });
     return () => unsubscribe();
@@ -106,7 +110,7 @@ export default function SideNavBar() {
             case 0:
               return (
                 <RightPanel>
-                  <BillEntryListTable uid={userData?.uid ?? ""} />
+                  <BillEntryListTable />
                 </RightPanel>
               );
               break;

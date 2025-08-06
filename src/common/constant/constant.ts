@@ -1,6 +1,8 @@
 import { auth } from "@/config/firebase";
 
 export const getUserData = () => {
+  if (typeof window === "undefined") return null; // Server-side
+
   return auth.currentUser;
 };
 
