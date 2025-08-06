@@ -41,9 +41,6 @@ export default function Home() {
     }
   }, [user]);
 
-  console.log("user", user);
-  console.log("refreshToken", user?.refreshToken);
-
   return (
     <>
       <Head>
