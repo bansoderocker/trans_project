@@ -19,12 +19,12 @@
     "@mui/x-data-grid-pro": "^7.22.1",
     "@mui/x-date-pickers": "^8.9.0",
     "@reduxjs/toolkit": "^2.8.2",
-    "axios": "^1.11.0",
-    "bootstrap": "^5.3.7",
+    "axios": "^1.13.6",
+    "bootstrap": "^5.3.8",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
-    "firebase": "^11.10.0",
-    "next": "15.4.4",
+    "firebase": "^12.10.0",
+    "next": "16.2.0",
     "node-localstorage": "^3.0.5",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",
@@ -34,7 +34,6 @@
   "devDependencies": {
     "eslint": "^9.32.0",
     "eslint-config-next": "^15.4.4",
-    "prettier": "^3.6.2",
     "typescript": "^5.8.3"
   }
 }
