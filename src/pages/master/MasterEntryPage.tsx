@@ -27,7 +27,7 @@ const masterTypes = [
   { value: "proprietor", label: "Proprietor" },
 ];
 
-function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
+function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
   const [formData, setFormData] = useState<MasterFormData>({
     name: "",
     type: "",
@@ -255,4 +255,4 @@ function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
   );
 }
 
-export default MasterForm;
+export default MasterEntryPage;

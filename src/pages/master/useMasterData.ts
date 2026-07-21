@@ -4,11 +4,10 @@ import {
   addMaster,
   updateMaster,
   deleteMaster,
-} from "./masterService";
-
+} from "@/services/masterService";
 import { MasterEntry, MasterFormData } from "@/interface";
 
-export function useMasterData(uid: string) {
+export default function useMasterData(uid: string) {
   const [entries, setEntries] = useState<MasterEntry[]>([]);
   const [formData, setFormData] = useState<MasterFormData>({
     name: "",

@@ -1,8 +1,8 @@
 "use client";
 
 import { MasterFormProps } from "@/interface";
-import { useMasterData } from "./useMasterData";
 import { masterTypes } from "@/common/constant/constant";
+import useMasterData from "./useMasterData";
 
 export default function MasterForm({ uid, title }: MasterFormProps) {
   const {
