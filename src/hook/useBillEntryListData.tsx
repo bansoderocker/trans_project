@@ -17,7 +17,8 @@ export const useBilEntryListData = (): Bill[] => {
             id: key,
             ...value,
           }));
-          setAllBills(list);
+          debugger;
+          setAllBills(list.filter((f) => !f?.isTrash));
         }
       }
     } catch (err) {

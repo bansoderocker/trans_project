@@ -11,6 +11,7 @@ export interface Bill {
   date: string;
   proprietor: string;
   displayBillName?: string;
+  isTrash?: boolean;
 }
 
 export interface addEditExpenseDetails {
