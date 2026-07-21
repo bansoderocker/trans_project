@@ -2,7 +2,7 @@
 
 import { MasterFormProps } from "@/interface";
 import { masterTypes } from "@/common/constant/constant";
-import useMasterData from "./useMasterData";
+import useMasterData_Master from "@/hook/useMasterData_Master";
 
 export default function MasterForm({ uid, title }: MasterFormProps) {
   const {
@@ -15,7 +15,7 @@ export default function MasterForm({ uid, title }: MasterFormProps) {
     handleSubmit,
     handleEdit,
     handleDelete,
-  } = useMasterData(uid);
+  } = useMasterData_Master(uid);
 
   return (
     <div className="container mt-4">
