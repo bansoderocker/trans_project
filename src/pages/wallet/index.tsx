@@ -1,19 +1,16 @@
 import Head from "next/head";
-import SideNavBar from "@/common/component/navSidebar/sidebar";
-import { auth, db } from "@/config/firebase";
 import { useEffect, useState } from "react";
 import { User } from "firebase/auth";
-import LoginButton from "./auth/LoginButton";
 import { Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { ref, set } from "firebase/database";
-import LoginPage from "./auth/LoginPage";
+import LoginButton from "../auth/LoginButton";
+import { auth, db } from "@/config/firebase";
+import SideNavBarWallet from "@/common/component/wallet/navSidebarWallet/SideNavBarWallet";
 import { dataBranch } from "@/common/constant/constant";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  // const { LocalStorage } = require("node-localstorage");
-  // const localStorage = new LocalStorage("./scratch"); // path where data is stored
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -34,8 +31,6 @@ export default function Home() {
         displayName: user.displayName,
         email: user.email,
       };
-
-      // localStorage.setItem("token", "abc123");
 
       user?.getIdToken(true).then((x) => localStorage.setItem("token", x));
 
@@ -61,22 +56,16 @@ export default function Home() {
           <CircularProgress size={60} color="primary" />
         </Box>
       ) : user != null && user ? (
-        <SideNavBar />
+        <SideNavBarWallet />
       ) : (
-        // <Box
-        //   display="flex"
-        //   justifyContent="center"
-        //   alignItems="center"
-        //   sx={{ height: "90vh", backgroundColor: "#f5f5f5" }}
-        // >
-        //   <Paper elevation={4} sx={{ p: 4, width: 400, textAlign: "center" }}>
-        //     <Typography variant="h6" gutterBottom>
-        //       Welcome to Trans App
-        //     </Typography>
-        //     <LoginButton />
-        //   </Paper>
-        // </Box>
-        <LoginPage />
+        <Box display="flex" justifyContent="center" alignItems="center">
+          <Paper elevation={4} sx={{ p: 4, width: 400, textAlign: "center" }}>
+            <Typography variant="h6" gutterBottom>
+              Welcome to Wallet App
+            </Typography>
+            <LoginButton />
+          </Paper>
+        </Box>
       )}
     </>
   );

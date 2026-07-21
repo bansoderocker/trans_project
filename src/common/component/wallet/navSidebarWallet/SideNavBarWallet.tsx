@@ -11,104 +11,43 @@ import {
   Avatar,
 } from "@mui/material";
 import { auth, logout } from "@/config/firebase";
-import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
-import MasterForm from "@/pages/master/MasterEntryPage";
-import { getUserData } from "@/common/constant/constant";
 import { User } from "firebase/auth";
+import { getUserData, walletPageNames } from "@/common/constant/constant";
 import { RightPanel } from "./RightPanel";
-import BillEntryPage from "@/pages/billEntry/_billEntryPage";
-import BillEntryList from "@/pages/billEntry/billEntryList";
+import { WalletDashboard } from "../dashboard";
+import { PageInProgress } from "../../pageInProgress";
 
-const pageNames = [
-  { name: "Bill" },
-  { name: "Daily Entry" },
-  { name: "Master" },
-  { name: "Expense" },
-  { name: "Wallet" },
-  { name: "About" },
-  { name: "Contact" },
-];
-
-export default function SideNavBar() {
+export default function SideNavBarWallet() {
   const [selectedPage, setSelectedPage] = useState<number>(0);
-  const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Sidebar open by default on desktop
 
-  const openBillEditor = (billId?: string) => {
-    setEditingBillId(billId ?? null);
-    setSelectedPage(0); // BillEntryPage
-  };
-
-  // 🔧 Fixed: only call getUserData when user exists
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        console.warn("No user logged in.");
+        return;
+      }
       if (user) {
-        setUserData(getUserData());
+        setUserData(getUserData()); // pass user into your helper
       } else {
         setUserData(null);
-        console.warn("No user logged in.");
       }
     });
     return () => unsubscribe();
   }, []);
-
   const handlePageChange = (index: number) => {
     if (selectedPage !== index) {
       setSelectedPage(index);
+      setIsMenuOpen(false); // Close sidebar on selection
     }
-    setIsMenuOpen(false);
   };
 
-  const renderPage = () => {
-    switch (selectedPage) {
-      case 0:
-        return (
-          <RightPanel>
-            <BillEntryPage
-              billId={editingBillId}
-              onBack={() => {
-                setEditingBillId(null);
-                setSelectedPage(1);
-              }}
-            />
-          </RightPanel>
-        );
-      case 1:
-        return (
-          <RightPanel>
-            <BillEntryList
-              onEdit={openBillEditor}
-              onAdd={() => openBillEditor()}
-            />
-          </RightPanel>
-        );
-      case 2:
-        return (
-          <RightPanel>
-            <MasterForm uid={userData?.uid ?? ""} />
-          </RightPanel>
-        );
-      case 3:
-        return (
-          <RightPanel>
-            <ExpenseDetailsPage uid={userData?.uid ?? ""} />
-          </RightPanel>
-        );
-      case 4:
-        return <RightPanel>Wallet</RightPanel>;
-      case 5:
-        return <RightPanel>About</RightPanel>;
-      case 6:
-        return <RightPanel>Contact</RightPanel>;
-      default:
-        return <RightPanel>Default Page</RightPanel>;
-    }
-  };
+  // const [selectedData, setSelectedData] = useState<string | number>();
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      {/* Header */}
+    <Box sx={{ display: "flex", flexDirection: "column" }}>
+      {/* Title Bar with Menu Icon */}
       <Box
         sx={{
           display: "flex",
@@ -123,25 +62,33 @@ export default function SideNavBar() {
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           sx={{ color: "white" }}
         >
-          {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+          <MenuIcon fontSize="large" />
         </IconButton>
         <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold" }}>
-          vTrans Dashboard
+          vTrans Dashboard 3
         </Typography>
       </Box>
 
-      {/* Sidebar Drawer */}
+      {/* Sidebar - Responsive */}
       <Drawer
         anchor="left"
         open={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         sx={{
           "& .MuiDrawer-paper": {
-            width: { xs: "80%", sm: "250px" },
-            paddingTop: "20px",
+            width: "80%", // Adjust width for mobile
+            maxWidth: "250px", // Prevent too much width
+            marginTop: 0, // Remove extra margin
           },
         }}
+        variant="temporary"
       >
+        <IconButton
+          onClick={() => setIsMenuOpen(false)}
+          sx={{ alignSelf: "flex-end", margin: 1 }}
+        >
+          <CloseIcon />
+        </IconButton>
         <SidebarContent
           userData={userData}
           handlePageChange={handlePageChange}
@@ -149,15 +96,47 @@ export default function SideNavBar() {
         />
       </Drawer>
 
-      {/* Main Page Content */}
+      {/* Main Content */}
       <Box sx={{ flexGrow: 1, padding: { xs: "8px", sm: "16px" } }}>
-        {renderPage()}
+        {(() => {
+          switch (selectedPage) {
+            case 0:
+              return (
+                <RightPanel>
+                  <WalletDashboard />
+                </RightPanel>
+              );
+            // case 1:
+            //   return (
+            //     <RightPanel>
+            //       <Transactions
+            //         setSelectedPage={setSelectedPage}
+            //         setFormData={setSelectedData}
+            //       />
+            //     </RightPanel>
+            //   );
+            case 2:
+              return (
+                <RightPanel>
+                  <h1>CASE 2</h1>
+                  {/* <AddEditTransaction editFormDataId={selectedData} /> */}
+                </RightPanel>
+              );
+
+            default:
+              return (
+                <RightPanel>
+                  <PageInProgress />
+                </RightPanel>
+              );
+          }
+        })()}
       </Box>
     </Box>
   );
 }
 
-// 🧩 Sidebar Content
+// Sidebar Content Component
 const SidebarContent = ({
   userData,
   handlePageChange,
@@ -169,9 +148,9 @@ const SidebarContent = ({
 }) => {
   return (
     <Box sx={{ textAlign: "center", width: "100%", paddingX: 2 }}>
-      {/* Profile */}
+      {/* Profile Section */}
       <Avatar
-        src={userData?.photoURL || "https://via.placeholder.com/50"}
+        src={userData?.photoURL || "https://via.placeholder.com/50"} // Default image
         alt="Profile"
         sx={{
           width: 60,
@@ -185,36 +164,32 @@ const SidebarContent = ({
         {userData?.displayName || "Guest User"}
       </Typography>
 
-      {/* Navigation */}
-      {pageNames.map((link, index) => (
+      {/* Navigation Links */}
+      {walletPageNames.map((link, index) => (
         <Box
           key={index}
           onClick={() => handlePageChange(index)}
           sx={{
             cursor: "pointer",
             padding: "10px",
+            textAlign: "center",
             backgroundColor: selectedPage === index ? "gray" : "Gainsboro",
             color: selectedPage === index ? "white" : "text.primary",
-            "&:hover": {
-              backgroundColor: "lightgray",
-              color: "black",
-            },
-            borderRadius: "4px",
-            marginBottom: "5px",
+            "&:hover": { backgroundColor: "lightgray", color: "black" },
           }}
         >
           <Typography>{link.name}</Typography>
         </Box>
       ))}
 
-      {/* Logout */}
+      {/* Logout Button with Icon */}
       <Button
         onClick={logout}
         variant="contained"
         color="error"
         startIcon={<LogoutIcon />}
         fullWidth
-        sx={{ marginTop: 2 }}
+        sx={{ marginBottom: 2, marginTop: 2 }}
       >
         Logout
       </Button>
