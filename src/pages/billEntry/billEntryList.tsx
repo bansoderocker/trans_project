@@ -89,32 +89,38 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
           return;
         }
 
-        const data = Object.entries(snapshot.val()).map(([id, value]: any) => {
-          const p = value.particular?.[0] ?? {};
-          const grandTotal =
-            p.expenses?.reduce(
-              (total: number, expense: any) =>
-                total + (Number(expense.amount) || 0),
-              0,
-            ) ?? 0;
-          return {
-            id,
+        const data = Object.entries(snapshot.val()).flatMap(
+          ([id, value]: any) => {
+            const particulars = value.particular ?? [];
 
-            billNo: value.billNo,
-            date: value.date,
-            party: value.party,
-            proprietor: value.proprietor,
+            return particulars.map((p: any, index: number) => {
+              const grandTotal =
+                p.expenses?.reduce(
+                  (total: number, expense: any) =>
+                    total + (Number(expense.amount) || 0),
+                  0,
+                ) ?? 0;
 
-            particularDate: p.particularDate ?? "",
-            vehicleNo: p.vehicleNo ?? "",
-            fromLocation: p.fromLocation ?? "",
-            toLocation: p.toLocation ?? "",
-            grandTotal,
-            // expenseCount: p.expenses?.length ?? 0,
-          };
-        });
+              return {
+                id: `${id}_${index}`,
+                recordId: id,
+                billNo: value.billNo,
+                date: value.date,
+                party: value.party,
+                proprietor: value.proprietor,
 
-        setRows(data);
+                particularDate: p.particularDate ?? "",
+                vehicleNo: p.vehicleNo ?? "",
+                fromLocation: p.fromLocation ?? "",
+                toLocation: p.toLocation ?? "",
+                grandTotal,
+                isTrash: value.isTrash ?? false,
+                particularIndex: index,
+              };
+            });
+          },
+        );
+        setRows(data.filter((f) => !f?.isTrash));
         setLoading(false);
       },
       (error) => {
@@ -141,7 +147,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
             <IconButton
               color="primary"
               size="small"
-              onClick={() => onEdit(params.row.id)}
+              onClick={() => onEdit(params.row.recordId)}
             >
               <EditIcon />
             </IconButton>
@@ -151,7 +157,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
             <IconButton
               color="error"
               size="small"
-              onClick={() => handleDelete(params.row.id)}
+              onClick={() => handleDelete(params.row.recordId)}
             >
               <DeleteIcon />
             </IconButton>
