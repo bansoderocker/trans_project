@@ -6,13 +6,13 @@ import {
   Paper,
   TextField,
   Typography,
-  Grid,
   ToggleButtonGroup,
   ToggleButton,
+  Box,
 } from "@mui/material";
 // import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 // import dayjs from "dayjs";
-
+// import Grid from "@mui/material/Grid2";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { TransactionType } from "@/common/constant/constant";
@@ -107,7 +107,7 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
 
   const handleTransactionTypeChange = (
     event: React.MouseEvent<HTMLElement>,
-    newType: string | null
+    newType: string | null,
   ) => {
     setFormData({
       ...formData,
@@ -117,7 +117,7 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
       "handleTransactionTypeChange:",
       formData,
       newType,
-      Boolean(newType === "credit")
+      Boolean(newType === "credit"),
     );
   };
   const handleSubmit = async () => {
@@ -138,9 +138,9 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
           Add / Edit Transaction
         </Typography>
 
-        <Grid container spacing={2}>
+        <Box>
           {/* Date */}
-          <Grid item xs={6}>
+          <Box>
             {/* <TextField
               label="Date"
               name="date"
@@ -168,17 +168,17 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
               onChange={(newDate) => handleDateChange(newDate)}
               dateFormat="dd/MM/yyyy" // ⚠️ must be lowercase yyyy
             />
-          </Grid>
-          <Grid item xs={6}>
+          </Box>
+          <Box>
             <Typography>
               {formData.paymentDate && isValid(new Date(formData.paymentDate))
                 ? format(new Date(formData.paymentDate), "dd MMM yyyy")
                 : "—"}
             </Typography>
-          </Grid>
+          </Box>
 
           {/* Expense Description */}
-          <Grid item xs={12}>
+          <Box>
             <TextField
               label="Expense Description"
               name="expense"
@@ -186,9 +186,9 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
               value={formData.expense}
               onChange={handleChange}
             />
-          </Grid>
+          </Box>
           {/* Credit/Debit Toggle */}
-          <Grid item xs={12}>
+          <Box>
             <ToggleButtonGroup
               value={formData.transactionType}
               exclusive
@@ -225,9 +225,9 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
                 DEBIT
               </ToggleButton>
             </ToggleButtonGroup>
-          </Grid>
+          </Box>
           {/* Expense Type */}
-          <Grid item xs={12}>
+          <Box>
             <TextField
               label="Expense Type"
               name="type"
@@ -242,10 +242,10 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
                 </MenuItem>
               ))}
             </TextField>
-          </Grid>
+          </Box>
 
           {/* Debit */}
-          <Grid item xs={6}>
+          <Box>
             <TextField
               label="amount"
               name="amount"
@@ -254,16 +254,16 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
               value={formData.amount}
               onChange={handleChange}
             />
-          </Grid>
+          </Box>
 
-          <Grid item xs={12}>
+          <Box>
             <Typography>
               {(formData.amount || 0) > 0 &&
                 convertAmountToWord(formData.amount || 0)}
             </Typography>
-          </Grid>
+          </Box>
           {/* Payment Mode */}
-          <Grid item xs={12}>
+          <Box>
             <TextField
               label="Payment Mode"
               name="paymentMode"
@@ -278,10 +278,10 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
                 </MenuItem>
               ))}
             </TextField>
-          </Grid>
+          </Box>
 
           {/* Submit */}
-          <Grid item xs={12}>
+          <Box>
             <Button
               variant="contained"
               color="primary"
@@ -290,8 +290,8 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
             >
               Save Transaction
             </Button>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Paper>
     </Container>
   );

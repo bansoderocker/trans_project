@@ -53,10 +53,12 @@ export default function Home() {
       </Head>
       {loading ? (
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="100vh"
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
         >
           <CircularProgress size={60} color="primary" />
         </Box>

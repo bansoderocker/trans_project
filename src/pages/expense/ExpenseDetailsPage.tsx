@@ -169,7 +169,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     <Container>
       <Typography variant="h4">Expense Details</Typography>
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
+        {/* <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <ReactDatePicker
               selected={new Date(expenseDetails.date)} // Convert the date string to a Date object
@@ -241,7 +241,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
               required
             />
           </Grid>
-        </Grid>
+        </Grid> */}
         <Button
           type="submit"
           variant="contained"

@@ -158,7 +158,7 @@ function PartyDetailsPage() {
         Party Details
       </Typography>
 
-      <form onSubmit={handleSubmit}>
+      {/* <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <TextField
@@ -202,7 +202,7 @@ function PartyDetailsPage() {
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </Box>
-      </form>
+      </form> */}
 
       {error && (
         <Alert severity="error" sx={{ mt: 3 }}>
@@ -215,9 +215,16 @@ function PartyDetailsPage() {
         </Alert>
       )}
 
-      <Typography mt={5}>All Party Details</Typography>
+      <Typography sx={{ mt: 5 }}>All Party Details</Typography>
       {isLoading && (
-        <Box display="flex" justifyContent="center" alignItems="center" mt={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            mt: 3,
+          }}
+        >
           <CircularProgress />
         </Box>
       )}

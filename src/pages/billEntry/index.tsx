@@ -1,3 +1,2 @@
-export * from "./billEntryList";
-export * from "./billEntryAddEdit";
-export * from "./BillEntryPage";
+export { default as BillEntryList } from "./billEntryList";
+export { default as BillEntryPage } from "./_billEntryPage";

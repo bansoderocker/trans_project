@@ -83,11 +83,11 @@ export const Transactions = (props: propTransaction) => {
 
   return (
     <Grid>
-      <Grid container alignItems="center" justifyContent="space-between">
-        <Grid item>
+      <Grid>
+        <Grid>
           <Typography>Welcome to Transactions</Typography>
         </Grid>
-        <Grid item>
+        <Grid>
           <Button
             variant="contained"
             color="primary"
