@@ -48,17 +48,25 @@ export default function Home() {
       </Head>
       {loading ? (
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="100vh"
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
         >
           <CircularProgress size={60} color="primary" />
         </Box>
       ) : user != null && user ? (
         <SideNavBarWallet />
       ) : (
-        <Box display="flex" justifyContent="center" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Paper elevation={4} sx={{ p: 4, width: 400, textAlign: "center" }}>
             <Typography variant="h6" gutterBottom>
               Welcome to Wallet App

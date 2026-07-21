@@ -41,10 +41,10 @@ export default function LoginPage() {
 
   return (
     <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
       sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         height: "100vh",
         background: "linear-gradient(135deg, #eef2f3, #dfe9f3)",
       }}
@@ -58,7 +58,8 @@ export default function LoginPage() {
           textAlign: "center",
         }}
       >
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
+          {" "}
           TMS Login
         </Typography>
 
@@ -83,14 +84,16 @@ export default function LoginPage() {
           margin="normal"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={handleTogglePassword} edge="end">
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleTogglePassword} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
