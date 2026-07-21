@@ -1,21 +1,8 @@
-import {
-  TextField,
-  Button,
-  Typography,
-  Container,
-  Grid,
-  Alert,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-  TableContainer,
-  IconButton,
-} from "@mui/material";
+"use client";
+
 import { useEffect, useState, FormEvent, useCallback } from "react";
 import { db } from "../../config/firebase";
+
 import {
   ref,
   push,
@@ -25,18 +12,12 @@ import {
   DatabaseReference,
   child,
 } from "firebase/database";
-import { Edit, Delete } from "@mui/icons-material";
 
-interface MasterEntry {
-  id?: string;
-  name: string;
-  type: string;
-}
+import { MasterEntry, MasterFormData, MasterFormProps } from "@/interface";
 
-interface MasterFormProps {
-  uid: string;
-  title?: string; // Optional if you want to pass "Master Manager"
-}
+import "bootstrap/dist/css/bootstrap.min.css";
+import { useMasterData } from "@/hook/useMasterData";
+import { dataBranch } from "@/common/constant/constant";
 
 const masterTypes = [
   { value: "party", label: "Party" },
@@ -46,53 +27,56 @@ const masterTypes = [
   { value: "proprietor", label: "Proprietor" },
 ];
 
-interface MasterFormData {
-  name: string;
-  type: string;
-  createdBy?: string;
-  key?: string;
-}
-
 function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
   const [formData, setFormData] = useState<MasterFormData>({
     name: "",
     type: "",
   });
-  const [entries, setEntries] = useState<MasterEntry[]>([]);
+
   const [editId, setEditId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // const [entries, setEntries] = useState<MasterEntry[]>([]);
   const [masterRef, setMasterRef] = useState<DatabaseReference>();
 
+  const { entries, loading, refresh } = useMasterData();
+
   useEffect(() => {
-    const refPath = `wallet/masters`;
+    const refPath = dataBranch.master;
     setMasterRef(ref(db, refPath));
   }, [uid]);
 
-  const fetchEntries = useCallback(async () => {
-    try {
-      if (masterRef) {
-        const snapshot = await get(masterRef);
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const list = Object.keys(data).map((key) => ({
-            id: key,
-            ...data[key],
-          }));
-          setEntries(list);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching master data:", err);
-    }
-  }, [masterRef]); // include `uid` or anything used inside
+  // const fetchEntries = useCallback(async () => {
+  //   try {
+  //     if (masterRef) {
+  //       const snapshot = await get(masterRef);
 
-  useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+  //       if (snapshot.exists()) {
+  //         const data = snapshot.val();
+
+  //         const list = Object.keys(data).map((key) => ({
+  //           id: key,
+  //           ...data[key],
+  //         }));
+
+  //         setEntries(list);
+  //       } else {
+  //         setEntries([]);
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching master data:", err);
+  //   }
+  // }, [masterRef]);
+
+  // useEffect(() => {
+  //   fetchEntries();
+  // }, [fetchEntries]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setError(null);
     setSuccessMessage(null);
 
@@ -107,15 +91,27 @@ function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
       if (masterRef) {
         if (editId) {
           await update(child(masterRef, editId), formData);
+
           setSuccessMessage("Entry updated successfully");
         } else {
           formData.createdBy = uid;
+
           await push(masterRef, formData);
+
           setSuccessMessage("Entry added successfully");
         }
-        setFormData({ name: "", type: "" });
+
+        setFormData({
+          name: "",
+          type: "",
+        });
+
         setEditId(null);
-        fetchEntries();
+
+        // fetchEntries();
+        refresh();
+      } else {
+        console.log("masterRef was missing: ", masterRef);
       }
     } catch (e) {
       setError("Error saving entry: " + e);
@@ -123,111 +119,139 @@ function MasterForm({ uid, title = "Master Manager" }: MasterFormProps) {
   };
 
   const handleEdit = (entry: MasterEntry) => {
-    setFormData({ name: entry.name, type: entry.type });
+    setFormData({
+      name: entry.name,
+      type: entry.type,
+    });
+
     setEditId(entry.id || null);
   };
 
   const handleDelete = async (entryId: string) => {
     try {
-      const entryRef = ref(db, `wallet/masters/${entryId}`);
-      await remove(entryRef); // This will remove the entry from the database
-      console.log("Entry deleted successfully");
-      fetchEntries();
+      const entryRef = ref(db, `${dataBranch.master}/${entryId}`);
+
+      await remove(entryRef);
+
+      // fetchEntries();
+      refresh();
     } catch (error) {
       console.error("Error deleting entry:", error);
     }
   };
 
   return (
-    <Container>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        {title}
-      </Typography>
+    <div className="container mt-4">
+      <h3 className="mb-4">{title}</h3>
+
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="Name"
-              name="name"
+        <div className="row g-3 align-items-end">
+          {/* Name */}
+          <div className="col-12 col-md-4">
+            <label className="form-label">Name</label>
+
+            <input
+              type="text"
+              className="form-control"
               value={formData.name}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev,
+                  name: e.target.value,
+                }))
               }
-              fullWidth
               required
             />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField
-              select
-              label="Type"
-              name="type"
+          </div>
+
+          {/* Type */}
+          <div className="col-12 col-md-4">
+            <label className="form-label">Type</label>
+
+            <select
+              className="form-select"
               value={formData.type}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, type: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev,
+                  type: e.target.value,
+                }))
               }
-              SelectProps={{ native: true }}
-              fullWidth
               required
             >
               <option value="">Select Type</option>
+
               {masterTypes.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.label}
                 </option>
               ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
+            </select>
+          </div>
+
+          {/* Button */}
+          <div className="col-12 col-md-4">
+            <button type="submit" className="btn btn-primary w-100">
               {editId ? "Update" : "Add"}
-            </Button>
-          </Grid>
-        </Grid>
+            </button>
+          </div>
+        </div>
       </form>
 
-      {error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {/* Error */}
+      {error && <div className="alert alert-danger mt-3">{error}</div>}
+
+      {/* Success */}
       {successMessage && (
-        <Alert severity="success" sx={{ mt: 2 }}>
-          {successMessage}
-        </Alert>
+        <div className="alert alert-success mt-3">{successMessage}</div>
       )}
 
-      <TableContainer component={Paper} sx={{ mt: 4 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {entries.map((entry) => (
-              <TableRow key={entry.id}>
-                <TableCell>{entry.name}</TableCell>
-                <TableCell>{entry.type}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(entry)}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleDelete(entry.id!)}
-                    color="error"
-                  >
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Container>
+      {/* Table */}
+      <div className="table-responsive mt-4">
+        <table className="table table-bordered table-striped align-middle">
+          <thead className="table-dark">
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th style={{ width: "150px" }}>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {entries.length > 0 ? (
+              entries.map((entry) => (
+                <tr key={entry.id}>
+                  <td>{entry.name}</td>
+                  <td>{entry.type}</td>
+
+                  <td>
+                    <button
+                      className="btn btn-sm btn-warning me-2"
+                      onClick={() => handleEdit(entry)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDelete(entry.id!)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={3} className="text-center">
+                  No entries found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 

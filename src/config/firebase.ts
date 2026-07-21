@@ -1,5 +1,10 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { collection, addDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getFirestore,
+  Firestore,
+} from "firebase/firestore";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -34,6 +39,7 @@ const firebaseConfig = {
 // firebase.initializeApp(firebaseConfig);
 let app: FirebaseApp;
 let db: Database;
+let db2: Firestore;
 let auth: Auth;
 // Initialize Firebase only if it hasn't been initialized before
 if (typeof window !== "undefined" && !getApps().length) {
@@ -44,6 +50,8 @@ if (typeof window !== "undefined" && !getApps().length) {
   // Initialize Firebase
   app = initializeApp(firebaseConfig);
   db = getDatabase(app);
+  db2 = getFirestore(app);
+
   auth = getAuth(app);
 } else {
   app = getApps()[0]; // Get the already initialized app
@@ -63,4 +71,4 @@ export const logout = async () => {
   await signOut(auth);
 };
 
-export { auth, collection, createUserWithEmailAndPassword, db, addDoc };
+export { auth, collection, createUserWithEmailAndPassword, db, db2, addDoc };

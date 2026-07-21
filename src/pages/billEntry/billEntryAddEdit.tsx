@@ -24,6 +24,7 @@ import {
   Typography,
 } from "@mui/material";
 import ReactDatePicker from "react-datepicker";
+import { dataBranch } from "@/common/constant/constant";
 
 export const AddEditBillEntry = ({
   uid,
@@ -52,11 +53,11 @@ export const AddEditBillEntry = ({
   };
 
   const [expenseFormData, setExpenseFormData] = useState<addEditExpenseDetails>(
-    defaultExpenseDetails
+    defaultExpenseDetails,
   );
 
   const [formData, setFormData] = useState<Bill>(
-    billDetails ?? defaultBillDetails
+    billDetails ?? defaultBillDetails,
   );
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export const AddEditBillEntry = ({
   }, [billDetails]);
 
   const [selectedBillId, setSelectedBillId] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -79,8 +80,8 @@ export const AddEditBillEntry = ({
   const [isFilterApply, setIsFilterApply] = useState<boolean>(false);
   useEffect(() => {
     if (db && uid) {
-      const billsReference = ref(db, `wallet/bills`);
-      const masterReference = ref(db, `wallet/masters`);
+      const billsReference = ref(db, dataBranch.bill);
+      const masterReference = ref(db, dataBranch.master);
       setBillsRef(billsReference);
       setMasterRef(masterReference);
     }
@@ -95,19 +96,19 @@ export const AddEditBillEntry = ({
           const values = Object.values(data);
           console.log("values", values);
           setPartyOptions(
-            values.filter((v) => v.type === "party").map((v) => v.name)
+            values.filter((v) => v.type === "party").map((v) => v.name),
           );
           setTruckOptions(
-            values.filter((v) => v.type === "truck").map((v) => v.name)
+            values.filter((v) => v.type === "truck").map((v) => v.name),
           );
           setLocationOptions(
-            values.filter((v) => v.type === "location").map((v) => v.name)
+            values.filter((v) => v.type === "location").map((v) => v.name),
           );
           setProprietorOptions(
-            values.filter((v) => v.type === "proprietor").map((v) => v.name)
+            values.filter((v) => v.type === "proprietor").map((v) => v.name),
           );
           setExpenseOptions(
-            values.filter((v) => v.type === "expenseType").map((v) => v.name)
+            values.filter((v) => v.type === "expenseType").map((v) => v.name),
           );
         }
       }
@@ -121,7 +122,7 @@ export const AddEditBillEntry = ({
   }, [uid, fetchMasterOptions]);
 
   const handleInputChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -133,7 +134,7 @@ export const AddEditBillEntry = ({
     }));
   };
   const handleExpenseChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setExpenseFormData((prev) => ({
@@ -161,7 +162,7 @@ export const AddEditBillEntry = ({
     try {
       if (formData.id && db) {
         // Update existing bill
-        const billRef = ref(db, `wallet/bills/${selectedBillId}`);
+        const billRef = ref(db, `${dataBranch.bill}/${selectedBillId}`);
         await set(billRef, formData);
         setSuccessMessage("Bill updated successfully!");
       } else if (billsRef) {
@@ -209,7 +210,7 @@ export const AddEditBillEntry = ({
       setExpenseRows((prev) => {
         const existing = prev ?? [];
         const alreadyExists = existing.some(
-          (row) => row.expenseType === obj.expenseType
+          (row) => row.expenseType === obj.expenseType,
         );
         return alreadyExists ? existing : [...existing, obj];
       });

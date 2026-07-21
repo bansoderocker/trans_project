@@ -1,10 +1,11 @@
+import { dataBranch } from "@/common/constant/constant";
 import { db } from "@/config/firebase";
 import { Bill } from "@/interface/billEntry";
 import { get, ref } from "firebase/database";
 import { useCallback, useEffect, useState } from "react";
 
 export const useBilEntryListData = (): Bill[] => {
-  const billsRef = ref(db, `wallet/bills`);
+  const billsRef = ref(db, dataBranch.bill);
   const [allBills, setAllBills] = useState<Bill[]>([]);
   const fetchBills = useCallback(async () => {
     try {
