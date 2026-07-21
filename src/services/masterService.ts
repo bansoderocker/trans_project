@@ -1,5 +1,5 @@
 import { dataBranch } from "@/common/constant/constant";
-import { db } from "../../config/firebase";
+import { db } from "@/config/firebase";
 import {
   ref,
   push,
