@@ -7,7 +7,7 @@ import {
 } from "@/services/masterService";
 import { MasterEntry, MasterFormData } from "@/interface";
 
-export default function useMasterData(uid: string) {
+export default function useMasterData_Master(uid: string) {
   const [entries, setEntries] = useState<MasterEntry[]>([]);
   const [formData, setFormData] = useState<MasterFormData>({
     name: "",
