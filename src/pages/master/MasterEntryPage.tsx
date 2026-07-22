@@ -140,6 +140,35 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
     }
   };
 
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {
+      party: true,
+      truck: false,
+      location: false,
+      expenseType: false,
+      proprietor: false,
+    },
+  );
+
+  const toggleGroup = (type: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+  };
+  const groupedEntries = entries.reduce(
+    (acc, entry) => {
+      if (!acc[entry.type]) {
+        acc[entry.type] = [];
+      }
+
+      acc[entry.type].push(entry);
+
+      return acc;
+    },
+    {} as Record<string, MasterEntry[]>,
+  );
+
   return (
     <div className="container mt-4">
       <h3 className="mb-4">{title}</h3>
@@ -212,42 +241,55 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
           <thead className="table-dark">
             <tr>
               <th>Name</th>
-              <th>Type</th>
               <th style={{ width: "150px" }}>Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {entries.length > 0 ? (
-              entries.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{entry.name}</td>
-                  <td>{entry.type}</td>
+            {masterTypes.map(({ value, label }) => {
+              const list = groupedEntries[value] || [];
 
-                  <td>
-                    <button
-                      className="btn btn-sm btn-warning me-2"
-                      onClick={() => handleEdit(entry)}
-                    >
-                      Edit
-                    </button>
+              if (!list.length) return null;
 
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(entry.id!)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={3} className="text-center">
-                  No entries found
-                </td>
-              </tr>
-            )}
+              const expanded = expandedGroups[value];
+
+              return (
+                <>
+                  <tr
+                    className="table-secondary"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => toggleGroup(value)}
+                  >
+                    <td colSpan={2} className="fw-bold">
+                      {expanded ? "▼" : "▶"} {label} ({list.length})
+                    </td>
+                  </tr>
+
+                  {expanded &&
+                    list.map((entry) => (
+                      <tr key={entry.id}>
+                        <td>{entry.name}</td>
+
+                        <td>
+                          <button
+                            className="btn btn-warning btn-sm me-2"
+                            onClick={() => handleEdit(entry)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDelete(entry.id!)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </>
+              );
+            })}
           </tbody>
         </table>
       </div>
