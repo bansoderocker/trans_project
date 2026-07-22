@@ -15,7 +15,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip, TextField } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { User } from "firebase/auth";
-
+import { GridRowSelectionModel } from "@mui/x-data-grid";
+import UpdatePaymentDialog from "./UpdatePaymentDialog";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 interface Props {
   onEdit: (id: string) => void;
   onAdd: () => void;
@@ -114,6 +117,12 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
                 fromLocation: p.fromLocation ?? "",
                 toLocation: p.toLocation ?? "",
                 grandTotal,
+                // Add these
+                paymentAmount: p.payment?.amount ?? 0,
+                paymentRemark: p.payment?.remark ?? "",
+                isFullySettled: p.payment?.isFullySettled ?? false,
+                paymentDate: p.payment?.paymentDate ?? "",
+
                 isTrash: value.isTrash ?? false,
                 particularIndex: index,
               };
@@ -232,6 +241,23 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
           maximumFractionDigits: 2,
         }),
     },
+    {
+      field: "paymentAmount",
+      headerName: "Payment",
+      width: 120,
+      type: "number",
+    },
+    {
+      field: "paymentRemark",
+      headerName: "Remark",
+      width: 200,
+    },
+    {
+      field: "isFullySettled",
+      headerName: "Settled",
+      width: 110,
+      renderCell: (params) => (params.value ? "Yes" : "No"),
+    },
   ];
 
   const filteredRows = useMemo(() => {
@@ -272,11 +298,135 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
         modifiedDate: new Date().toISOString(),
       });
 
-      alert("Bill deleted successfully.");
+      toast.warning("Bill deleted successfully.");
     } catch (error) {
       console.error(error);
-      alert("Failed to delete bill.");
+      toast.warning("Failed to delete bill.");
     }
+  };
+
+  // ----------------- Update Payment
+  const [rowSelectionModel, setRowSelectionModel] =
+    useState<GridRowSelectionModel>({
+      type: "include",
+      ids: new Set(),
+    });
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  const [paymentOpen, setPaymentOpen] = useState(false);
+
+  const [savingPayment, setSavingPayment] = useState(false);
+
+  const handleUpdatePayment = async (
+    amount: number,
+    remark: string,
+    isFullySettled: boolean,
+  ) => {
+    setSavingPayment(true);
+
+    try {
+      // Firebase update here
+      const selectedIds = Array.from(rowSelectionModel.ids);
+
+      await Promise.all(
+        selectedIds.map(async (rowId) => {
+          const row = rows.find((r) => r.id === rowId);
+          if (!row) return;
+
+          const payment = {
+            amount,
+            remark,
+            isFullySettled,
+            paymentDate: new Date().toISOString(),
+            createdBy: userData?.uid,
+            createdDate: new Date().toISOString(),
+          };
+
+          const paymentRef = ref(
+            db,
+            `${dataBranch.bill}/${row.recordId}/particular/${row.particularIndex}`,
+          );
+
+          await update(paymentRef, {
+            payment,
+            isFullySettled,
+          });
+        }),
+      );
+
+      setPaymentOpen(false);
+      setSelectedRows([]);
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const selectedBillRows = useMemo(() => {
+    const selectedIds = Array.from(rowSelectionModel.ids);
+
+    return rows.filter((r) => selectedIds.includes(r.id));
+  }, [rowSelectionModel, rows]);
+
+  // ------- Update Payment Validation for single party selection
+  const handleOpenPaymentDialog = () => {
+    const selectedIds = Array.from(rowSelectionModel.ids);
+
+    const selectedBillRows = rows.filter((r) => selectedIds.includes(r.id));
+
+    if (selectedBillRows.length === 0) {
+      toast.warning("Please select at least one record.");
+      return;
+    }
+
+    // Same party validation
+    const uniqueParties = [...new Set(selectedBillRows.map((r) => r.party))];
+
+    if (uniqueParties.length > 1) {
+      toast.warning("Please select records belonging to only one party.");
+      return;
+    }
+
+    // Validation only for multiple selection
+    if (selectedBillRows.length > 1) {
+      const firstRow = selectedBillRows[0];
+
+      const firstIsPaid =
+        !!firstRow.paymentAmount ||
+        !!firstRow.paymentRemark ||
+        !!firstRow.paymentDate;
+
+      if (!firstIsPaid) {
+        // All must be unpaid
+        const hasPaidRow = selectedBillRows.some(
+          (r) => !!r.paymentAmount || !!r.paymentRemark || !!r.paymentDate,
+        );
+
+        if (hasPaidRow) {
+          toast.warning(
+            "Please select either all unpaid records or records with the same payment.",
+          );
+          return;
+        }
+      } else {
+        // All must have identical payment details
+        const isSamePayment = selectedBillRows.every(
+          (r) =>
+            r.paymentAmount === firstRow.paymentAmount &&
+            r.paymentRemark === firstRow.paymentRemark &&
+            r.paymentDate === firstRow.paymentDate,
+        );
+
+        if (!isSamePayment) {
+          toast.warning(
+            "Please select records having the same payment details.",
+          );
+          return;
+        }
+      }
+    }
+
+    setSelectedRows(selectedBillRows);
+    setPaymentOpen(true);
   };
 
   return (
@@ -298,9 +448,20 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
           sx={{ width: 350 }}
         />
 
-        <Button variant="contained" onClick={onAdd}>
-          Add Bill
-        </Button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <Button variant="contained" onClick={onAdd}>
+            Add Bill
+          </Button>
+
+          <Button
+            variant="contained"
+            color="success"
+            disabled={rowSelectionModel.ids.size === 0}
+            onClick={handleOpenPaymentDialog}
+          >
+            Update Payment ({rowSelectionModel.ids.size})
+          </Button>
+        </div>
       </div>
       {loading ? (
         <>
@@ -321,8 +482,13 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
         <DataGrid
           rows={filteredRows}
           columns={columns}
-          getRowId={(row) => row.id}
+          checkboxSelection
           disableRowSelectionOnClick
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionModelChange={(newSelection) =>
+            setRowSelectionModel(newSelection)
+          }
+          getRowId={(row) => row.id}
           pageSizeOptions={[10, 25, 50, 100]}
           initialState={{
             pagination: {
@@ -333,6 +499,13 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
           }}
         />
       )}
+      <UpdatePaymentDialog
+        open={paymentOpen}
+        loading={savingPayment}
+        selectedRows={selectedBillRows}
+        onClose={() => setPaymentOpen(false)}
+        onSave={handleUpdatePayment}
+      />
     </div>
   );
 }

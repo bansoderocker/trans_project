@@ -5,7 +5,7 @@ export const getUserData = () => {
 
   return auth.currentUser;
 };
-
+export const MAX_AMOUNT = 10000000; // 1 Crore
 // const masterTypes = [
 //   { value: "party", label: "Party" },
 //   { value: "truck", label: "Truck" },

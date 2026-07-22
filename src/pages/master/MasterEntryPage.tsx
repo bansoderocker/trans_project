@@ -18,6 +18,7 @@ import { MasterEntry, MasterFormData, MasterFormProps } from "@/interface";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useMasterData } from "@/hook/useMasterData";
 import { dataBranch } from "@/common/constant/constant";
+import { allcapitalizeWords, capitalizeWords } from "@/common/util/customLogic";
 
 const masterTypes = [
   { value: "party", label: "Party" },
@@ -87,6 +88,21 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
       return;
     }
 
+    // Duplicate validation
+    const normalizedName = name.trim().toLowerCase();
+
+    const duplicate = entries.find(
+      (entry) =>
+        entry.type === type &&
+        entry.name.trim().toLowerCase() === normalizedName &&
+        entry.id !== editId,
+    );
+
+    if (duplicate) {
+      setError(`"${name}" already exists under "${type}".`);
+      return;
+    }
+
     try {
       if (masterRef) {
         if (editId) {
@@ -120,7 +136,7 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
 
   const handleEdit = (entry: MasterEntry) => {
     setFormData({
-      name: entry.name,
+      name: capitalizeWords(entry.name),
       type: entry.type,
     });
 
@@ -169,6 +185,11 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
     {} as Record<string, MasterEntry[]>,
   );
 
+  // Sort each group
+  Object.values(groupedEntries).forEach((list) => {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  });
+
   return (
     <div className="container mt-4">
       <h3 className="mb-4">{title}</h3>
@@ -186,7 +207,7 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  name: e.target.value,
+                  name: capitalizeWords(e.target.value),
                 }))
               }
               required
@@ -268,8 +289,11 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
                   {expanded &&
                     list.map((entry) => (
                       <tr key={entry.id}>
-                        <td>{entry.name}</td>
-
+                        <td>
+                          {label === "Truck"
+                            ? allcapitalizeWords(entry.name)
+                            : capitalizeWords(entry.name)}
+                        </td>
                         <td>
                           <button
                             className="btn btn-warning btn-sm me-2"
