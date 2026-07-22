@@ -74,13 +74,13 @@ export default function UpdatePaymentDialog({
     await onSave(Number(amount), remark.trim(), isFullySettled);
   };
 
-  const overallTotal = selectedRows.reduce(
+  const overallTotal = (selectedRows ?? []).reduce(
     (sum, x) => sum + Number(x.grandTotal || 0),
     0,
   );
 
   const groupedBills = Object.values(
-    selectedRows.reduce(
+    (selectedRows ?? []).reduce(
       (acc, row) => {
         if (!acc[row.billNo]) {
           acc[row.billNo] = {

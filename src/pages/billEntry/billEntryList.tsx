@@ -98,7 +98,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
 
             return particulars.map((p: any, index: number) => {
               const grandTotal =
-                p.expenses?.reduce(
+                (p.expenses ?? []).reduce(
                   (total: number, expense: any) =>
                     total + (Number(expense.amount) || 0),
                   0,
