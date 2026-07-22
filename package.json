@@ -27,7 +27,7 @@
     "firebase": "^12.10.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
-    "next": "16.2.0",
+    "next": "16.2.10",
     "node-localstorage": "^3.0.5",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",
@@ -39,5 +39,9 @@
     "eslint": "^9.32.0",
     "eslint-config-next": "^15.4.4",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "sharp":"^0.35.3",
+    "postcss":"^8.5.21"
   }
 }
