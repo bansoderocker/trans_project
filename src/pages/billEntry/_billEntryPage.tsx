@@ -210,10 +210,13 @@ export default function BillEntryPage({ billId, onBack }: Props) {
   };
 
   // Grand total across every record and every expense line
-  const grandTotal = particular.reduce(
+  const grandTotal = (particular ?? []).reduce(
     (recSum, r) =>
       recSum +
-      r.expenses.reduce((exSum, ex) => exSum + (parseFloat(ex.amount) || 0), 0),
+      (r.expenses ?? []).reduce(
+        (exSum, ex) => exSum + (parseFloat(ex.amount) || 0),
+        0,
+      ),
     0,
   );
 
