@@ -12,6 +12,46 @@ import {
 import { User } from "firebase/auth";
 import { get, push, ref, update } from "firebase/database";
 import { db } from "@/config/firebase";
+import { Autocomplete, TextField } from "@mui/material";
+import styles from "./BillEntryPage.module.css";
+
+interface SearchableSelectProps {
+  options: MasterEntry[];
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}
+
+const SearchableSelect = ({
+  options,
+  value,
+  placeholder,
+  onChange,
+}: SearchableSelectProps) => (
+  <Autocomplete<MasterEntry, false, false, true>
+    className={styles.searchableSelect}
+    disablePortal
+    freeSolo
+    clearOnBlur={false}
+    options={options}
+    value={options.find((option) => option.id === value) ?? (value || null)}
+    getOptionLabel={(option) =>
+      typeof option === "string" ? option : option.name
+    }
+    isOptionEqualToValue={(option, selected) =>
+      typeof selected !== "string" && option.id === selected.id
+    }
+    onChange={(_, option) =>
+      onChange(typeof option === "string" ? option : option?.id ?? "")
+    }
+    onInputChange={(_, inputValue, reason) => {
+      if (reason === "input" || reason === "clear") onChange(inputValue);
+    }}
+    renderInput={(params) => (
+      <TextField {...params} required placeholder={placeholder} size="small" />
+    )}
+  />
+);
 
 // One expense line (Expense Type + Amount) inside a trip record
 interface ExpenseLine {
@@ -220,6 +260,41 @@ export default function BillEntryPage({ billId, onBack }: Props) {
     0,
   );
 
+  const resolveMasterId = (
+    value: string,
+    type: MasterType,
+    pendingEntries: Map<string, Promise<string>>,
+  ): Promise<string> => {
+    const name = value.trim();
+    if (!name) return Promise.reject(new Error("A dropdown value is required."));
+
+    const cacheKey = `${type}:${name.toLowerCase()}`;
+    const pendingEntry = pendingEntries.get(cacheKey);
+    if (pendingEntry) return pendingEntry;
+
+    const operation = (async () => {
+      const existingEntry = entries.find(
+        (entry) =>
+          entry.type === type &&
+          (entry.id === value || entry.name.trim().toLowerCase() === name.toLowerCase()),
+      );
+
+      if (existingEntry) return existingEntry.id;
+
+      const newEntry = await push(ref(db, dataBranch.master), {
+        name,
+        type,
+        createdBy: userData?.uid ?? null,
+      });
+
+      if (!newEntry.key) throw new Error(`Unable to create ${type} master entry.`);
+      return newEntry.key;
+    })();
+
+    pendingEntries.set(cacheKey, operation);
+    return operation;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -230,10 +305,55 @@ export default function BillEntryPage({ billId, onBack }: Props) {
     setSubmitting(true);
 
     try {
+      const pendingEntries = new Map<string, Promise<string>>();
+      const savedHeader = {
+        ...header,
+        proprietor: await resolveMasterId(
+          header.proprietor,
+          MasterType.Proprietor,
+          pendingEntries,
+        ),
+        party: await resolveMasterId(
+          header.party,
+          MasterType.Party,
+          pendingEntries,
+        ),
+      };
+      const savedParticulars = await Promise.all(
+        particular.map(async (record) => ({
+          ...record,
+          vehicleNo: await resolveMasterId(
+            record.vehicleNo,
+            MasterType.Truck,
+            pendingEntries,
+          ),
+          fromLocation: await resolveMasterId(
+            record.fromLocation,
+            MasterType.Location,
+            pendingEntries,
+          ),
+          toLocation: await resolveMasterId(
+            record.toLocation,
+            MasterType.Location,
+            pendingEntries,
+          ),
+          expenses: await Promise.all(
+            record.expenses.map(async (expense) => ({
+              ...expense,
+              expenseType: await resolveMasterId(
+                expense.expenseType,
+                MasterType.ExpenseType,
+                pendingEntries,
+              ),
+            })),
+          ),
+        })),
+      );
+
       if (billId) {
         const payload = {
-          ...header,
-          particular,
+          ...savedHeader,
+          particular: savedParticulars,
           modifiedBy: userData?.uid ?? null,
           modifiedDate: new Date().toISOString(),
         };
@@ -241,8 +361,8 @@ export default function BillEntryPage({ billId, onBack }: Props) {
         await update(ref(db, `${dataBranch.bill}/${billId}`), payload);
       } else {
         const payload = {
-          ...header,
-          particular,
+          ...savedHeader,
+          particular: savedParticulars,
           createdBy: userData?.uid ?? null,
           createdOn: new Date().toISOString(),
         };
@@ -264,10 +384,10 @@ export default function BillEntryPage({ billId, onBack }: Props) {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <h3 className="mb-4">Bill Entry</h3>
+    <div className={`container py-3 py-md-4 ${styles.page}`}>
+      <div className={`card shadow-sm ${styles.card}`}>
+        <div className={styles.cardBody}>
+          <h3 className={`mb-4 ${styles.title}`}>Bill Entry</h3>
 
           {submitError && (
             <div className="alert alert-danger" role="alert">
@@ -282,50 +402,36 @@ export default function BillEntryPage({ billId, onBack }: Props) {
 
           <form onSubmit={handleSubmit}>
             {/* ---------- Header fields ---------- */}
-            <div className="row g-3 mb-3">
-              <div className="col-md-3">
+            <div className="row g-3 mb-4">
+              <div className="col-12 col-sm-6 col-xl-3">
                 <label className="form-label" htmlFor="proprietor">
                   Select Proprietor
                 </label>
-                <select
-                  id="proprietor"
-                  className="form-select"
-                  name="proprietor"
-                  value={header?.proprietor}
-                  onChange={handleHeaderChange}
-                  required
-                >
-                  <option value="">Select Proprietor</option>
-                  {lstProprietor.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={lstProprietor}
+                  value={header.proprietor}
+                  placeholder="Select Proprietor"
+                  onChange={(value) =>
+                    setHeader((prev) => ({ ...prev, proprietor: value }))
+                  }
+                />
               </div>
 
-              <div className="col-md-3">
+              <div className="col-12 col-sm-6 col-xl-3">
                 <label className="form-label" htmlFor="party">
                   Select Party
                 </label>
-                <select
-                  id="party"
-                  className="form-select"
-                  name="party"
-                  value={header?.party}
-                  onChange={handleHeaderChange}
-                  required
-                >
-                  <option value="">Select Party</option>
-                  {lstParty.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={lstParty}
+                  value={header.party}
+                  placeholder="Select Party"
+                  onChange={(value) =>
+                    setHeader((prev) => ({ ...prev, party: value }))
+                  }
+                />
               </div>
 
-              <div className="col-md-3">
+              <div className="col-12 col-sm-6 col-xl-3">
                 <label className="form-label" htmlFor="billNo">
                   Bill No
                 </label>
@@ -340,7 +446,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                 />
               </div>
 
-              <div className="col-md-3">
+              <div className="col-12 col-sm-6 col-xl-3">
                 <label className="form-label" htmlFor="date">
                   Date {displayDate(header?.date)}
                 </label>
@@ -368,9 +474,11 @@ export default function BillEntryPage({ billId, onBack }: Props) {
               return (
                 <div
                   key={record.uid}
-                  className="border rounded p-3 mb-3 bg-light-subtle"
+                  className={`${styles.tripCard} mb-3`}
                 >
-                  <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div
+                    className={`d-flex justify-content-between align-items-center mb-3 ${styles.tripHeader}`}
+                  >
                     <h6 className="mb-0">Particular #{recordIndex + 1}</h6>
 
                     {particular.length > 1 && (
@@ -386,7 +494,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
 
                   <div className="row g-3">
                     {/*Particular Date*/}
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-xl-3">
                       <label className="form-label" htmlFor="date">
                         Particular Date {displayDate(record.particularDate)}
                       </label>
@@ -408,90 +516,54 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                     </div>
 
                     {/* Vehicle */}
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-xl-3">
                       <label className="form-label">Vehicle No</label>
-                      <select
-                        className="form-select"
+                      <SearchableSelect
+                        options={lstTruck}
                         value={record.vehicleNo}
-                        onChange={(e) =>
-                          handleParticularChange(
-                            record.uid,
-                            "vehicleNo",
-                            e.target.value,
-                          )
+                        placeholder="Select Vehicle"
+                        onChange={(value) =>
+                          handleParticularChange(record.uid, "vehicleNo", value)
                         }
-                        required
-                      >
-                        <option value="">Select Vehicle</option>
-                        {lstTruck.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
 
                     {/* From */}
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-xl-3">
                       <label className="form-label">From Location</label>
-                      <select
-                        className="form-select"
+                      <SearchableSelect
+                        options={lstLocation}
                         value={record.fromLocation}
-                        onChange={(e) =>
-                          handleParticularChange(
-                            record.uid,
-                            "fromLocation",
-                            e.target.value,
-                          )
+                        placeholder="Select From Location"
+                        onChange={(value) =>
+                          handleParticularChange(record.uid, "fromLocation", value)
                         }
-                        required
-                      >
-                        <option value="">Select From Location</option>
-                        {lstLocation.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
 
                     {/* To */}
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-xl-3">
                       <label className="form-label">To Location</label>
-                      <select
-                        className="form-select"
+                      <SearchableSelect
+                        options={lstLocation}
                         value={record.toLocation}
-                        onChange={(e) =>
-                          handleParticularChange(
-                            record.uid,
-                            "toLocation",
-                            e.target.value,
-                          )
+                        placeholder="Select To Location"
+                        onChange={(value) =>
+                          handleParticularChange(record.uid, "toLocation", value)
                         }
-                        required
-                      >
-                        <option value="">Select To Location</option>
-                        {lstLocation.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
                   </div>
 
                   {/* ---------- Expense lines for this record ---------- */}
-                  <div className="mt-3">
-                    <div
-                      className="d-flex justify-content-between align-items-center mb-2 px-2 py-1 rounded"
-                      style={{ backgroundColor: "#e9ecef" }}
-                    >
+                  <div className={styles.expenseSection}>
+                    <div className={styles.expenseHeader}>
                       <label className="form-label fw-semibold mb-0">
                         Expenses
                       </label>
                       <button
                         type="button"
-                        className="btn btn-outline-primary"
+                        className="btn btn-outline-primary btn-sm"
                         onClick={() => addExpenseLine(record.uid)}
                       >
                         + Add Expense
@@ -502,35 +574,28 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                         className="row g-2 align-items-end mb-2"
                         key={expense.uid}
                       >
-                        <div className="col-md-5">
+                        <div className="col-12 col-md-5">
                           {expenseIndex === 0 && (
                             <label className="form-label small">
                               Expense Type
                             </label>
                           )}
-                          <select
-                            className="form-select"
+                          <SearchableSelect
+                            options={lstExpenseType}
                             value={expense.expenseType}
-                            onChange={(e) =>
+                            placeholder="Select Expense Type"
+                            onChange={(value) =>
                               handleExpenseChange(
                                 record.uid,
                                 expense.uid,
                                 "expenseType",
-                                e.target.value,
+                                value,
                               )
                             }
-                            required
-                          >
-                            <option value="">Select Expense Type</option>
-                            {lstExpenseType.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </div>
 
-                        <div className="col-md-5">
+                        <div className="col-12 col-md-5">
                           {expenseIndex === 0 && (
                             <label className="form-label small">Amount</label>
                           )}
@@ -539,6 +604,8 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                             min="0"
                             step="0.01"
                             className="form-control"
+                            placeholder="Amount"
+                            aria-label="Expense amount"
                             value={expense.amount}
                             onChange={(e) =>
                               handleExpenseChange(
@@ -552,7 +619,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                           />
                         </div>
 
-                        <div className="col-md-2">
+                        <div className="col-12 col-md-2">
                           {record.expenses.length > 1 && (
                             <button
                               type="button"
@@ -568,7 +635,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                       </div>
                     ))}
 
-                    <div className="text-end small text-muted mt-1">
+                    <div className={`text-end small text-muted ${styles.subtotal}`}>
                       Particular Subtotal: {recordSubtotal.toFixed(2)}
                     </div>
                   </div>
@@ -576,7 +643,9 @@ export default function BillEntryPage({ billId, onBack }: Props) {
               );
             })}
 
-            <div className="d-flex justify-content-between align-items-center mb-3">
+            <div
+              className={`d-flex justify-content-between align-items-center mb-3 ${styles.formActions}`}
+            >
               <button
                 type="button"
                 className="btn btn-outline-primary"
@@ -585,14 +654,14 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                 + Add Particular
               </button>
 
-              <div className="d-flex align-items-center">
-                <h6 className="mb-0">
+              <div className={`d-flex align-items-center ${styles.saveGroup}`}>
+                <h6 className={`mb-0 ${styles.total}`}>
                   Grand Total: <strong>{grandTotal.toFixed(2)}</strong>
                 </h6>
 
                 <button
                   type="submit"
-                  className="btn btn-primary ms-3"
+                  className="btn btn-primary"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}
