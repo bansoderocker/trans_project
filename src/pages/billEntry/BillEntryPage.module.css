@@ -1,0 +1,117 @@
+.page {
+  max-width: 1440px;
+}
+
+.card {
+  border: 0;
+  border-radius: 1rem;
+  overflow: visible;
+}
+
+.cardBody {
+  padding: 1.5rem;
+}
+
+.searchableSelect {
+  width: 100%;
+}
+
+.title {
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tripCard {
+  border: 1px solid #dee2e6;
+  border-radius: 0.85rem;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.tripHeader,
+.expenseHeader,
+.formActions {
+  gap: 0.75rem;
+}
+
+.expenseSection {
+  margin-top: 1.25rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.expenseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.subtotal {
+  padding-top: 0.6rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.total {
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.6rem;
+  background: #e7f1ff;
+  color: #084298;
+  white-space: nowrap;
+}
+
+.saveGroup {
+  gap: 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  .page {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .card {
+    border-radius: 0.75rem;
+  }
+
+  .cardBody {
+    padding: 1rem;
+  }
+
+  .tripCard {
+    padding: 0.875rem;
+  }
+
+  .tripHeader,
+  .expenseHeader,
+  .formActions {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .tripHeader button,
+  .expenseHeader button,
+  .formActions > button,
+  .formActions :global(.btn) {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .expenseSection {
+    padding: 0.75rem;
+  }
+
+  .total {
+    width: 100%;
+    text-align: center;
+  }
+
+  .saveGroup {
+    display: grid !important;
+    width: 100%;
+    gap: 0.75rem;
+  }
+}
