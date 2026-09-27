@@ -82,19 +82,19 @@ export interface BillHeader {
 }
 const makeUid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const newExpenseLine = (): ExpenseLine => ({
+const newExpenseLine = (expenseType = ""): ExpenseLine => ({
   uid: makeUid(),
-  expenseType: "",
+  expenseType,
   amount: "",
 });
 
-const newTripParticular = (): TripParticular => ({
+const newTripParticular = (defaultExpenseType = ""): TripParticular => ({
   uid: makeUid(),
   particularDate: "",
   vehicleNo: "",
   fromLocation: "",
   toLocation: "",
-  expenses: [newExpenseLine()],
+  expenses: [newExpenseLine(defaultExpenseType)],
 });
 
 // Header no longer carries createdBy/createdOn — those are stamped at submit time
@@ -124,6 +124,20 @@ export default function BillEntryPage({ billId, onBack }: Props) {
     setLstLocation(entries.filter((x) => x.type === MasterType.Location));
     setLstExpenseType(entries.filter((x) => x.type === MasterType.ExpenseType));
   }, [entries]);
+
+  useEffect(() => {
+    const defaultExpenseType = lstExpenseType[0]?.id;
+    if (!defaultExpenseType) return;
+
+    setParticulars((prev) =>
+      prev.map((record) => ({
+        ...record,
+        expenses: record.expenses.map((expense) =>
+          expense.expenseType ? expense : { ...expense, expenseType: defaultExpenseType },
+        ),
+      })),
+    );
+  }, [lstExpenseType]);
 
   useEffect(() => {
     if (!billId) return;
@@ -173,12 +187,18 @@ export default function BillEntryPage({ billId, onBack }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [saveAction, setSaveAction] = useState<"list" | "clear">("list");
 
   const handleHeaderChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setHeader((prev) => ({ ...prev, [name]: value }));
+    if (name === "date") {
+      setParticulars((prev) =>
+        prev.map((record) => ({ ...record, particularDate: value })),
+      );
+    }
   };
 
   // ---- Particular-level handlers ----
@@ -193,7 +213,10 @@ export default function BillEntryPage({ billId, onBack }: Props) {
   };
 
   const addParticular = () => {
-    setParticulars((prev) => [...prev, newTripParticular()]);
+    setParticulars((prev) => [
+      ...prev,
+      newTripParticular(lstExpenseType[0]?.id ?? ""),
+    ]);
   };
 
   const removeParticular = (recordUid: string) => {
@@ -227,7 +250,10 @@ export default function BillEntryPage({ billId, onBack }: Props) {
     setParticulars((prev) =>
       prev.map((r) =>
         r.uid === recordUid
-          ? { ...r, expenses: [...r.expenses, newExpenseLine()] }
+          ? {
+              ...r,
+              expenses: [...r.expenses, newExpenseLine(lstExpenseType[0]?.id ?? "")],
+            }
           : r,
       ),
     );
@@ -370,10 +396,17 @@ export default function BillEntryPage({ billId, onBack }: Props) {
         await push(ref(db, dataBranch.bill), payload);
       }
 
-      onBack();
-
-      setHeader(initialHeader);
-      setParticulars([newTripParticular()]);
+      if (saveAction === "list") onBack();
+      setHeader((prev) =>
+        saveAction === "clear"
+          ? {
+              ...initialHeader,
+              proprietor: prev.proprietor,
+              party: prev.party,
+            }
+          : initialHeader,
+      );
+      setParticulars([newTripParticular(lstExpenseType[0]?.id ?? "")]);
       setSubmitSuccess(true);
     } catch (err) {
       console.error("Failed to save bill entry:", err);
@@ -659,13 +692,24 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                   Grand Total: <strong>{grandTotal.toFixed(2)}</strong>
                 </h6>
 
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={submitting}
-                >
-                  {submitting ? "Saving..." : "Save"}
-                </button>
+                <div className="d-flex gap-2" role="group" aria-label="Save options">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={submitting}
+                    onClick={() => setSaveAction("list")}
+                  >
+                    {submitting ? "Saving..." : "Save & Return to List"}
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-outline-primary"
+                    disabled={submitting}
+                    onClick={() => setSaveAction("clear")}
+                  >
+                    {submitting ? "Saving..." : "Save & New Entry"}
+                  </button>
+                </div>
               </div>
             </div>
           </form>
