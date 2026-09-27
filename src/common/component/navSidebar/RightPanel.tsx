@@ -11,8 +11,10 @@ export const RightPanel: React.FC<RightPanelProps> = ({ children }) => {
       sx={{
         // width: "100%",
         display: "flex",
+        width: "100%",
+        minWidth: 0,
         // justifyContent: "center", // Centers content horizontally
-        alignItems: "center", // Centers content vertically if needed
+        alignItems: "stretch",
         // minHeight: "100vh", // Optional: makes sure it takes full height
       }}
     >

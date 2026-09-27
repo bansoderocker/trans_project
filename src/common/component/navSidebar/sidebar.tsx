@@ -18,6 +18,7 @@ import { User } from "firebase/auth";
 import { RightPanel } from "./RightPanel";
 import BillEntryPage from "@/pages/billEntry/_billEntryPage";
 import BillEntryList from "@/pages/billEntry/billEntryList";
+import BankTransactionList from "@/common/component/wallet/bankTransactions/BankTransactionList";
 
 const pageNames = [
   { name: "Bill" },
@@ -27,6 +28,7 @@ const pageNames = [
   { name: "Wallet" },
   { name: "About" },
   { name: "Contact" },
+  { name: "Bank Transactions" },
 ];
 
 export default function SideNavBar() {
@@ -101,6 +103,18 @@ export default function SideNavBar() {
         return <RightPanel>About</RightPanel>;
       case 6:
         return <RightPanel>Contact</RightPanel>;
+      case 7:
+        return (
+          <RightPanel>
+            <BankTransactionList />
+          </RightPanel>
+        );
+      case 8:
+        return (
+          <RightPanel>
+            <BankTransactionList openAddOnMount />
+          </RightPanel>
+        );
       default:
         return <RightPanel>Default Page</RightPanel>;
     }

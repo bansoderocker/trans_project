@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { onValue, ref, update } from "firebase/database";
+import { get, onValue, ref, update } from "firebase/database";
 
 import { db } from "@/config/firebase";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/common/constant/constant";
 import { useMasterData } from "@/hook/useMasterData";
 import { MasterEntry } from "@/interface";
+import { BankTransaction } from "@/interface/bankTransaction";
 
 import {
   Skeleton,
@@ -698,7 +699,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
   // Export Excel
   // ---------------------------------------------------------
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const selectedBillRows =
       getSelectedBillRows();
 
@@ -724,6 +725,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
       ),
     ];
 
+    console.log("uniqueParties",uniqueParties)
     if (
       uniqueParties.length > 1
     ) {
@@ -734,316 +736,192 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
       return;
     }
 
-    // ------------------------------------------
-    // Validate one Proprietor
-    // ------------------------------------------
-
-    const uniqueProprietors = [
-      ...new Set(
-        selectedBillRows.map(
-          (r) => r.proprietor
-        )
-      ),
-    ];
-
-    if (
-      uniqueProprietors.length > 1
-    ) {
-      toast.warning(
-        "Please select records belonging to only one proprietor for Excel export."
-      );
-
-      return;
-    }
-
     const firstRow =
       selectedBillRows[0];
-
-    const proprietorName =
-      proprietorMap[
-        firstRow.proprietor
-      ] ??
-      firstRow.proprietor ??
-      "";
 
     const partyName =
       partyMap[firstRow.party] ??
       firstRow.party ??
       "";
 
-    // ------------------------------------------
-    // Excel detail rows
-    // ------------------------------------------
-
-    const excelRows =
-      selectedBillRows.map(
-        (row, index) => ({
-          "Sr. No.": index + 1,
-
-          "Bill No":
-            row.billNo ?? "",
-
-          "Bill Date":
-            row.date ?? "",
-
-          "Trip Date":
-            row.particularDate ?? "",
-
-          Truck:
-            truckMap[
-              row.vehicleNo
-            ] ??
-            row.vehicleNo ??
-            "",
-
-          From:
-            locationMap[
-              row.fromLocation
-            ] ??
-            row.fromLocation ??
-            "",
-
-          To:
-            locationMap[
-              row.toLocation
-            ] ??
-            row.toLocation ??
-            "",
-
-          "Grand Total":
-            Number(
-              row.grandTotal
-            ) || 0,
-
-          Payment:
-            Number(
-              row.paymentAmount
-            ) || 0,
-
-          Remark:
-            row.paymentRemark ??
-            "",
-
-          Settled:
-            row.isFullySettled
-              ? "Yes"
-              : "No",
-        })
+    let bankTransactions: BankTransaction[] = [];
+    try {
+      const bankTransactionSnapshot = await get(
+        ref(db, dataBranch.bankTransaction),
       );
-
-    // ------------------------------------------
-    // Totals
-    // ------------------------------------------
-
-    const grandTotal =
-      selectedBillRows.reduce(
-        (total, row) =>
-          total +
-          (Number(
-            row.grandTotal
-          ) || 0),
-        0
-      );
-
-    const paymentTotal =
-      selectedBillRows.reduce(
-        (total, row) =>
-          total +
-          (Number(
-            row.paymentAmount
-          ) || 0),
-        0
-      );
-
-    const balance =
-      grandTotal - paymentTotal;
-
-    // ------------------------------------------
-    // Excel Sheet
-    // ------------------------------------------
-
-    const sheetData: any[][] = [
-      [
-        "TRANSPORT BILL STATEMENT",
-      ],
-
-      [],
-
-      [
-        "Proprietor",
-        proprietorName,
-      ],
-
-      [
-        "Party",
-        partyName,
-      ],
-
-      [],
-
-      [
-        "Sr. No.",
-        "Bill No",
-        "Bill Date",
-        "Trip Date",
-        "Truck",
-        "From",
-        "To",
-        "Grand Total",
-        "Payment",
-        "Remark",
-        "Settled",
-      ],
-
-      ...excelRows.map((row) =>
-        Object.values(row)
-      ),
-
-      [],
-
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "TOTAL",
-        grandTotal,
-        paymentTotal,
-        "",
-        "",
-      ],
-
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "BALANCE",
-        balance,
-        "",
-        "",
-        "",
-      ],
-    ];
-
-    const worksheet =
-      XLSX.utils.aoa_to_sheet(
-        sheetData
-      );
-
-    // ------------------------------------------
-    // Merge Header
-    // ------------------------------------------
-
-    worksheet["!merges"] = [
-      {
-        s: {
-          r: 0,
-          c: 0,
-        },
-        e: {
-          r: 0,
-          c: 10,
-        },
-      },
-
-      {
-        s: {
-          r: 2,
-          c: 1,
-        },
-        e: {
-          r: 2,
-          c: 10,
-        },
-      },
-
-      {
-        s: {
-          r: 3,
-          c: 1,
-        },
-        e: {
-          r: 3,
-          c: 10,
-        },
-      },
-    ];
-
-    // ------------------------------------------
-    // Column Widths
-    // ------------------------------------------
-
-    worksheet["!cols"] = [
-      { wch: 8 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 18 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 25 },
-      { wch: 12 },
-    ];
-
-    // ------------------------------------------
-    // Number Formatting
-    // ------------------------------------------
-
-    const dataStartRow = 6;
-
-    const dataEndRow =
-      dataStartRow +
-      excelRows.length -
-      1;
-
-    for (
-      let row = dataStartRow;
-      row <= dataEndRow;
-      row++
-    ) {
-      const excelRow =
-        row + 1;
-
-      if (
-        worksheet[
-          `H${excelRow}`
-        ]
-      ) {
-        worksheet[
-          `H${excelRow}`
-        ].z = "#,##0.00";
+      if (bankTransactionSnapshot.exists()) {
+        bankTransactions = Object.entries(
+          bankTransactionSnapshot.val() as Record<string, Omit<BankTransaction, "id">>,
+        )
+          .map(([id, transaction]) => ({ id, ...transaction }))
+          .filter((transaction) => transaction.isdeleted !== 1);
       }
-
-      if (
-        worksheet[
-          `I${excelRow}`
-        ]
-      ) {
-        worksheet[
-          `I${excelRow}`
-        ].z = "#,##0.00";
-      }
+    } catch (error) {
+      console.error("Failed to load bank transactions for Excel export:", error);
+      toast.error("Could not load bank transactions for Excel export.");
+      return;
     }
 
-    // ------------------------------------------
-    // Create Workbook
-    // ------------------------------------------
+    const workbook = XLSX.utils.book_new();
 
-    const workbook =
-      XLSX.utils.book_new();
+    const rowsByProprietor = new Map<string, typeof selectedBillRows>();
+    selectedBillRows.forEach((row) => {
+      const key = row.proprietor ?? "";
+      rowsByProprietor.set(key, [...(rowsByProprietor.get(key) ?? []), row]);
+    });
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Bill Statement"
-    );
+    rowsByProprietor.forEach((proprietorRows, proprietorId) => {
+      const proprietorName = proprietorMap[proprietorId] ?? proprietorId ?? "";
+      type LedgerEntry = {
+        date: string;
+        entryType: string;
+        billNo: string;
+        tripDate: string;
+        truck: string;
+        from: string;
+        to: string;
+        debit: number;
+        credit: number;
+        remark: string;
+        order: number;
+      };
+      const ledgerEntries: LedgerEntry[] = [];
+      proprietorRows.forEach((row) => {
+        const billDate = row.date ?? row.particularDate ?? "";
+        ledgerEntries.push({
+          date: billDate,
+          entryType: "Bill",
+          billNo: String(row.billNo ?? ""),
+          tripDate: row.particularDate ?? "",
+          truck: truckMap[row.vehicleNo] ?? row.vehicleNo ?? "",
+          from: locationMap[row.fromLocation] ?? row.fromLocation ?? "",
+          to: locationMap[row.toLocation] ?? row.toLocation ?? "",
+          debit: Number(row.grandTotal) || 0,
+          credit: 0,
+          remark: "",
+          order: 0,
+        });
+
+        const billPayment = Number(row.paymentAmount) || 0;
+        if (billPayment > 0) {
+          ledgerEntries.push({
+            date: row.paymentDate ?? billDate,
+            entryType: "Bill Payment",
+            billNo: String(row.billNo ?? ""),
+            tripDate: row.particularDate ?? "",
+            truck: "",
+            from: "",
+            to: "",
+            debit: 0,
+            credit: billPayment,
+            remark: row.paymentRemark ?? "",
+            order: 1,
+          });
+        }
+      });
+
+      bankTransactions
+        .filter(
+          (transaction) =>
+            transaction.party === firstRow.party &&
+            transaction.proprietor === proprietorId,
+        )
+        .forEach((transaction) => {
+          ledgerEntries.push({
+            date: transaction.paymentDate ?? "",
+            entryType: "Payment Received",
+            billNo: "",
+            tripDate: "",
+            truck: "",
+            from: "",
+            to: "",
+            debit: 0,
+            credit: Number(transaction.paymentAmount) || 0,
+            remark: transaction.remark ?? "",
+            order: 1,
+          });
+        });
+
+      ledgerEntries.sort(
+        (a, b) => a.date.localeCompare(b.date) || a.order - b.order,
+      );
+      let balance = 0;
+      const excelRows = ledgerEntries.map((entry, index) => {
+        balance += entry.debit - entry.credit;
+        return [
+          index + 1,
+          entry.date,
+          entry.entryType,
+          entry.billNo,
+          entry.tripDate,
+          entry.truck,
+          entry.from,
+          entry.to,
+          entry.debit,
+          entry.credit,
+          balance,
+          entry.remark,
+        ];
+      });
+      const debitTotal = ledgerEntries.reduce((total, entry) => total + entry.debit, 0);
+      const creditTotal = ledgerEntries.reduce((total, entry) => total + entry.credit, 0);
+      const sheetData: any[][] = [
+        ["TRANSPORT BILL STATEMENT"],
+        [],
+        ["Proprietor", proprietorName],
+        ["Party", partyName],
+        [],
+        ["Sr. No.", "Date", "Entry", "Bill No", "Trip Date", "Truck", "From", "To", "Bill Amount", "Payment Received", "Balance", "Remark"],
+        ...excelRows,
+        [],
+        ["", "", "", "", "", "", "", "TOTAL", debitTotal, creditTotal, balance, ""],
+      ];
+      const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+      ["A3", "B3", "A4", "B4"].forEach((cell) => {
+        if (worksheet[cell]) {
+          worksheet[cell].s = {
+            ...worksheet[cell].s,
+            font: { ...worksheet[cell].s?.font, bold: true },
+          };
+        }
+      });
+      // for (let column = 0; column < 11; column++) {
+      //   const cell = XLSX.utils.encode_cell({ r: 5, c: column });
+      //   if (worksheet[cell]) {
+      //     worksheet[cell].s = {
+      //       ...worksheet[cell].s,
+      //       font: { ...worksheet[cell].s?.font, bold: true },
+      //     };
+      //   }
+      // }
+      worksheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
+        { s: { r: 2, c: 1 }, e: { r: 2, c: 11 } },
+        { s: { r: 3, c: 1 }, e: { r: 3, c: 11 } },
+      ];
+      worksheet["!cols"] = [
+        { wch: 8 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 18 },
+        { wch: 20 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 25 },
+      ];
+      for (let row = 6; row < 6 + excelRows.length + 1; row++) {
+        const excelRow = row + 1;
+        ["I", "J", "K"].forEach((column) => {
+          if (worksheet[`${column}${excelRow}`]) {
+            worksheet[`${column}${excelRow}`].z = "#,##0.00";
+          }
+        });
+      }
+      const baseSheetName =
+        proprietorName.replace(/[\\/?*\[\]:]/g, " ").trim().slice(0, 31) ||
+        "Proprietor";
+      let sheetName = baseSheetName;
+      let suffix = 2;
+      while (workbook.SheetNames.includes(sheetName)) {
+        const suffixText = ` (${suffix++})`;
+        sheetName = `${baseSheetName.slice(0, 31 - suffixText.length)}${suffixText}`;
+      }
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    });
 
     // ------------------------------------------
     // File Name
@@ -1229,9 +1107,19 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
           onRowSelectionModelChange={(
             newSelection
           ) => {
-            setRowSelectionModel(
-              newSelection
-            );
+            if (newSelection.type === "exclude") {
+              setRowSelectionModel({
+                type: "include",
+                ids: new Set(
+                  filteredRows
+                    .filter((row) => !newSelection.ids.has(row.id))
+                    .map((row) => row.id),
+                ),
+              });
+              return;
+            }
+
+            setRowSelectionModel(newSelection);
           }}
           getRowId={(row) =>
             row.id

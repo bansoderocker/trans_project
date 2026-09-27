@@ -56,5 +56,6 @@ export const dataBranch = {
   master: "wallet/masters",
   bill: "wallet/bills",
   expense: "wallet/expenses",
+  bankTransaction: "wallet/BankTransaction",
   user: "wallet/user",
 };
