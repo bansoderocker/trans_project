@@ -30,19 +30,19 @@
 }
 
 .tripHeader,
-.expenseHeader,
+.incomeHeader,
 .formActions {
   gap: 0.75rem;
 }
 
-.expenseSection {
+.incomeSection {
   margin-top: 1.25rem;
   padding: 0.75rem;
   border-radius: 0.75rem;
   background: #fff;
 }
 
-.expenseHeader {
+.incomeHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -86,21 +86,21 @@
   }
 
   .tripHeader,
-  .expenseHeader,
+  .incomeHeader,
   .formActions {
     align-items: stretch !important;
     flex-direction: column;
   }
 
   .tripHeader button,
-  .expenseHeader button,
+  .incomeHeader button,
   .formActions > button,
   .formActions :global(.btn) {
     width: 100%;
     min-height: 2.75rem;
   }
 
-  .expenseSection {
+  .incomeSection {
     padding: 0.75rem;
   }
 

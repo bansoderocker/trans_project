@@ -34,7 +34,9 @@ interface Props {
 }
 
 export default function BillEntryList({ onEdit, onAdd }: Props) {
-  const { entries } = useMasterData();
+  const [masterTrigger, setMasterTrigger] = useState(false);
+
+  const { entries,refresh } = useMasterData(masterTrigger);
 
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
       entries.filter(
         (x: MasterEntry) => x.type === MasterType.Proprietor
       ),
-    [entries]
+    [entries,refresh]
   );
 
   const lstParty = useMemo(
@@ -58,7 +60,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
       entries.filter(
         (x: MasterEntry) => x.type === MasterType.Party
       ),
-    [entries]
+    [entries,refresh]
   );
 
   const lstTruck = useMemo(
@@ -66,7 +68,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
       entries.filter(
         (x: MasterEntry) => x.type === MasterType.Truck
       ),
-    [entries]
+    [entries,refresh]
   );
 
   const lstLocation = useMemo(
@@ -74,7 +76,7 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
       entries.filter(
         (x: MasterEntry) => x.type === MasterType.Location
       ),
-    [entries]
+    [entries,refresh]
   );
 
   // ---------------------------------------------------------
@@ -138,13 +140,13 @@ export default function BillEntryList({ onEdit, onAdd }: Props) {
             return particulars.map(
               (p: any, index: number) => {
                 const grandTotal =
-                  (p.expenses ?? []).reduce(
+                  (p.incomes ?? []).reduce(
                     (
                       total: number,
-                      expense: any
+                      income: any
                     ) =>
                       total +
-                      (Number(expense.amount) || 0),
+                      (Number(income.amount) || 0),
                     0
                   ) ?? 0;
 

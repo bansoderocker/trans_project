@@ -9,7 +9,7 @@ export const saveAddEditTransaction = async (formData?: Transaction) => {
   // useEffect(() => async {
   //   try {
   //     const docRef = await addDoc(
-  //       collection(db2, DBCollection.monthlyExpense),
+  //       collection(db2, DBCollection.monthlyIncome),
   //       formData
   //     );
 
@@ -23,7 +23,7 @@ export const saveAddEditTransaction = async (formData?: Transaction) => {
 
   try {
     const docRef = await addDoc(
-      collection(db2, DBCollection.monthlyExpense),
+      collection(db2, DBCollection.monthlyIncome),
       formData,
     );
     console.log("Transaction saved with ID:", docRef.id);

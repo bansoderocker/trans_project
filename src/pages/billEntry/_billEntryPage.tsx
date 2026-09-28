@@ -53,21 +53,21 @@ const SearchableSelect = ({
   />
 );
 
-// One expense line (Expense Type + Amount) inside a trip record
-interface ExpenseLine {
+// One income line (Income Type + Amount) inside a trip record
+interface IncomeLine {
   uid: string;
-  expenseType: string;
+  IncomeType: string;
   amount: string;
 }
 
-// One trip record: Vehicle No / From / To + multiple expense lines
+// One trip record: Vehicle No / From / To + multiple income lines
 interface TripParticular {
   uid: string;
   particularDate: string;
   vehicleNo: string;
   fromLocation: string;
   toLocation: string;
-  expenses: ExpenseLine[];
+  incomes: IncomeLine[];
 }
 export interface BillHeader {
   proprietor: string;
@@ -82,19 +82,19 @@ export interface BillHeader {
 }
 const makeUid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const newExpenseLine = (expenseType = ""): ExpenseLine => ({
+const newIncomeLine = (IncomeType = ""): IncomeLine => ({
   uid: makeUid(),
-  expenseType,
+  IncomeType,
   amount: "",
 });
 
-const newTripParticular = (defaultExpenseType = ""): TripParticular => ({
+const newTripParticular = (defaultIncomeType = ""): TripParticular => ({
   uid: makeUid(),
   particularDate: "",
   vehicleNo: "",
   fromLocation: "",
   toLocation: "",
-  expenses: [newExpenseLine(defaultExpenseType)],
+  incomes: [newIncomeLine(defaultIncomeType)],
 });
 
 // Header no longer carries createdBy/createdOn — those are stamped at submit time
@@ -109,35 +109,59 @@ interface Props {
   onBack: () => void;
 }
 export default function BillEntryPage({ billId, onBack }: Props) {
-  const { entries } = useMasterData();
+
+
+  
+  // Multiple trip particulars, each with its own income lines
+  const [particular, setParticulars] = useState<TripParticular[]>([
+    newTripParticular(),
+  ]);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [masterTrigger, setMasterTrigger] = useState(false);
+  const [saveAction, setSaveAction] = useState<"list" | "clear">("list");
+
+  const { entries } = useMasterData(masterTrigger);
 
   const [lstProprietor, setLstProprietor] = useState<MasterEntry[]>([]);
   const [lstParty, setLstParty] = useState<MasterEntry[]>([]);
   const [lstTruck, setLstTruck] = useState<MasterEntry[]>([]);
   const [lstLocation, setLstLocation] = useState<MasterEntry[]>([]);
-  const [lstExpenseType, setLstExpenseType] = useState<MasterEntry[]>([]);
+  const [lstIncomeType, setLstIncomeType] = useState<MasterEntry[]>([]);
+
+  const sortAZ = (a: MasterEntry, b: MasterEntry) =>
+  a.name.trim().localeCompare(
+    b.name.trim(),
+    undefined,
+    {
+      numeric: true,
+      sensitivity: "base",
+    }
+  );
 
   useEffect(() => {
-    setLstProprietor(entries.filter((x) => x.type === MasterType.Proprietor));
-    setLstParty(entries.filter((x) => x.type === MasterType.Party));
-    setLstTruck(entries.filter((x) => x.type === MasterType.Truck));
-    setLstLocation(entries.filter((x) => x.type === MasterType.Location));
-    setLstExpenseType(entries.filter((x) => x.type === MasterType.ExpenseType));
-  }, [entries]);
+    setLstProprietor(entries.filter((x) => x.type === MasterType.Proprietor).sort(sortAZ));
+    setLstParty(entries.filter((x) => x.type === MasterType.Party).sort(sortAZ));
+    setLstTruck(entries.filter((x) => x.type === MasterType.Truck).sort(sortAZ));
+    setLstLocation(entries.filter((x) => x.type === MasterType.Location).sort(sortAZ));
+    setLstIncomeType(entries.filter((x) => x.type === MasterType.IncomeType).sort(sortAZ));
+  }, [entries,submitSuccess]);
 
   useEffect(() => {
-    const defaultExpenseType = lstExpenseType[0]?.id;
-    if (!defaultExpenseType) return;
+    const defaultIncomeType = lstIncomeType[0]?.id;
+    if (!defaultIncomeType) return;
 
     setParticulars((prev) =>
       prev.map((record) => ({
         ...record,
-        expenses: record.expenses.map((expense) =>
-          expense.expenseType ? expense : { ...expense, expenseType: defaultExpenseType },
+        incomes: record.incomes.map((income) =>
+          income.IncomeType ? income : { ...income, IncomeType: defaultIncomeType },
         ),
       })),
     );
-  }, [lstExpenseType]);
+  }, [lstIncomeType]);
 
   useEffect(() => {
     if (!billId) return;
@@ -179,15 +203,6 @@ export default function BillEntryPage({ billId, onBack }: Props) {
       .replace(/ /g, "-");
   };
 
-  // Multiple trip particulars, each with its own expense lines
-  const [particular, setParticulars] = useState<TripParticular[]>([
-    newTripParticular(),
-  ]);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [saveAction, setSaveAction] = useState<"list" | "clear">("list");
 
   const handleHeaderChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -215,7 +230,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
   const addParticular = () => {
     setParticulars((prev) => [
       ...prev,
-      newTripParticular(lstExpenseType[0]?.id ?? ""),
+      newTripParticular(lstIncomeType[0]?.id ?? ""),
     ]);
   };
 
@@ -225,11 +240,11 @@ export default function BillEntryPage({ billId, onBack }: Props) {
     );
   };
 
-  // ---- Expense-line-level handlers (nested inside a record) ----
-  const handleExpenseChange = (
+  // ---- Income-line-level handlers (nested inside a record) ----
+  const handleIncomeChange = (
     recordUid: string,
-    expenseUid: string,
-    field: "expenseType" | "amount",
+    incomeUid: string,
+    field: "IncomeType" | "amount",
     value: string,
   ) => {
     setParticulars((prev) =>
@@ -237,8 +252,8 @@ export default function BillEntryPage({ billId, onBack }: Props) {
         r.uid === recordUid
           ? {
               ...r,
-              expenses: r.expenses.map((ex) =>
-                ex.uid === expenseUid ? { ...ex, [field]: value } : ex,
+              incomes: r.incomes.map((ex) =>
+                ex.uid === incomeUid ? { ...ex, [field]: value } : ex,
               ),
             }
           : r,
@@ -246,40 +261,40 @@ export default function BillEntryPage({ billId, onBack }: Props) {
     );
   };
 
-  const addExpenseLine = (recordUid: string) => {
+  const addIncomeLine = (recordUid: string) => {
     setParticulars((prev) =>
       prev.map((r) =>
         r.uid === recordUid
           ? {
               ...r,
-              expenses: [...r.expenses, newExpenseLine(lstExpenseType[0]?.id ?? "")],
+              incomes: [...r.incomes, newIncomeLine(lstIncomeType[0]?.id ?? "")],
             }
           : r,
       ),
     );
   };
 
-  const removeExpenseLine = (recordUid: string, expenseUid: string) => {
+  const removeIncomeLine = (recordUid: string, incomeUid: string) => {
     setParticulars((prev) =>
       prev.map((r) =>
         r.uid === recordUid
           ? {
               ...r,
-              expenses:
-                r.expenses.length > 1
-                  ? r.expenses.filter((ex) => ex.uid !== expenseUid)
-                  : r.expenses,
+              incomes:
+                r.incomes.length > 1
+                  ? r.incomes.filter((ex) => ex.uid !== incomeUid)
+                  : r.incomes,
             }
           : r,
       ),
     );
   };
 
-  // Grand total across every record and every expense line
+  // Grand total across every record and every income line
   const grandTotal = (particular ?? []).reduce(
     (recSum, r) =>
       recSum +
-      (r.expenses ?? []).reduce(
+      (r.incomes ?? []).reduce(
         (exSum, ex) => exSum + (parseFloat(ex.amount) || 0),
         0,
       ),
@@ -314,6 +329,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
       });
 
       if (!newEntry.key) throw new Error(`Unable to create ${type} master entry.`);
+      setMasterTrigger(!masterTrigger);
       return newEntry.key;
     })();
 
@@ -363,12 +379,12 @@ export default function BillEntryPage({ billId, onBack }: Props) {
             MasterType.Location,
             pendingEntries,
           ),
-          expenses: await Promise.all(
-            record.expenses.map(async (expense) => ({
-              ...expense,
-              expenseType: await resolveMasterId(
-                expense.expenseType,
-                MasterType.ExpenseType,
+          incomes: await Promise.all(
+            record.incomes.map(async (income) => ({
+              ...income,
+              IncomeType: await resolveMasterId(
+                income.IncomeType,
+                MasterType.IncomeType,
                 pendingEntries,
               ),
             })),
@@ -406,7 +422,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
             }
           : initialHeader,
       );
-      setParticulars([newTripParticular(lstExpenseType[0]?.id ?? "")]);
+      setParticulars([newTripParticular(lstIncomeType[0]?.id ?? "")]);
       setSubmitSuccess(true);
     } catch (err) {
       console.error("Failed to save bill entry:", err);
@@ -497,9 +513,9 @@ export default function BillEntryPage({ billId, onBack }: Props) {
 
             <hr />
 
-            {/* ---------- Trip particular (Vehicle / From / To + Expenses) ---------- */}
+            {/* ---------- Trip particular (Vehicle / From / To + Incomes) ---------- */}
             {particular.map((record, recordIndex) => {
-              const recordSubtotal = record.expenses.reduce(
+              const recordSubtotal = record.incomes.reduce(
                 (sum, ex) => sum + (parseFloat(ex.amount) || 0),
                 0,
               );
@@ -588,40 +604,40 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                     </div>
                   </div>
 
-                  {/* ---------- Expense lines for this record ---------- */}
-                  <div className={styles.expenseSection}>
-                    <div className={styles.expenseHeader}>
+                  {/* ---------- Income lines for this record ---------- */}
+                  <div className={styles.incomeSection}>
+                    <div className={styles.incomeHeader}>
                       <label className="form-label fw-semibold mb-0">
-                        Expenses
+                        Incomes
                       </label>
                       <button
                         type="button"
                         className="btn btn-outline-primary btn-sm"
-                        onClick={() => addExpenseLine(record.uid)}
+                        onClick={() => addIncomeLine(record.uid)}
                       >
-                        + Add Expense
+                        + Add Income
                       </button>
                     </div>
-                    {record.expenses.map((expense, expenseIndex) => (
+                    {record.incomes.map((income, incomeIndex) => (
                       <div
                         className="row g-2 align-items-end mb-2"
-                        key={expense.uid}
+                        key={income.uid}
                       >
                         <div className="col-12 col-md-5">
-                          {expenseIndex === 0 && (
+                          {incomeIndex === 0 && (
                             <label className="form-label small">
-                              Expense Type
+                              Income Type
                             </label>
                           )}
                           <SearchableSelect
-                            options={lstExpenseType}
-                            value={expense.expenseType}
-                            placeholder="Select Expense Type"
+                            options={lstIncomeType}
+                            value={income.IncomeType}
+                            placeholder="Select Income Type"
                             onChange={(value) =>
-                              handleExpenseChange(
+                              handleIncomeChange(
                                 record.uid,
-                                expense.uid,
-                                "expenseType",
+                                income.uid,
+                                "IncomeType",
                                 value,
                               )
                             }
@@ -629,7 +645,7 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                         </div>
 
                         <div className="col-12 col-md-5">
-                          {expenseIndex === 0 && (
+                          {incomeIndex === 0 && (
                             <label className="form-label small">Amount</label>
                           )}
                           <input
@@ -638,12 +654,12 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                             step="0.01"
                             className="form-control"
                             placeholder="Amount"
-                            aria-label="Expense amount"
-                            value={expense.amount}
+                            aria-label="Income amount"
+                            value={income.amount}
                             onChange={(e) =>
-                              handleExpenseChange(
+                              handleIncomeChange(
                                 record.uid,
-                                expense.uid,
+                                income.uid,
                                 "amount",
                                 e.target.value,
                               )
@@ -653,12 +669,12 @@ export default function BillEntryPage({ billId, onBack }: Props) {
                         </div>
 
                         <div className="col-12 col-md-2">
-                          {record.expenses.length > 1 && (
+                          {record.incomes.length > 1 && (
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-danger w-100"
                               onClick={() =>
-                                removeExpenseLine(record.uid, expense.uid)
+                                removeIncomeLine(record.uid, income.uid)
                               }
                             >
                               Remove

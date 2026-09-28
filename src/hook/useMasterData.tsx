@@ -1,27 +1,20 @@
 import { dataBranch } from "@/common/constant/constant";
 import { db } from "@/config/firebase";
 import { MasterEntry } from "@/interface";
-import { DatabaseReference, get, ref } from "firebase/database";
+import { get, ref } from "firebase/database";
 import { useCallback, useEffect, useState } from "react";
 
-export const useMasterData = () => {
+export const useMasterData = (masterTrigger: boolean) => {
   const [entries, setEntries] = useState<MasterEntry[]>([]);
-  const [masterRef, setMasterRef] = useState<DatabaseReference>();
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    setMasterRef(ref(db, dataBranch.master));
-  }, []);
-
   const fetchEntries = useCallback(async () => {
-    if (!masterRef) return;
-
     try {
       setLoading(true);
       setError(null);
 
+      const masterRef = ref(db, dataBranch.master);
       const snapshot = await get(masterRef);
 
       if (snapshot.exists()) {
@@ -42,11 +35,11 @@ export const useMasterData = () => {
     } finally {
       setLoading(false);
     }
-  }, [masterRef]);
+  }, []);
 
   useEffect(() => {
     fetchEntries();
-  }, [fetchEntries]);
+  }, [fetchEntries, masterTrigger]);
 
   return {
     entries,

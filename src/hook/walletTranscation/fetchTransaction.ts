@@ -7,8 +7,8 @@ import { db2 } from "@/config/firebase";
 export async function fetchTransactions(id?: string): Promise<Transaction[]> {
   const querySnapshot = await getDocs(
     id
-      ? collection(db2, DBCollection.monthlyExpense, id)
-      : collection(db2, DBCollection.monthlyExpense)
+      ? collection(db2, DBCollection.monthlyIncome, id)
+      : collection(db2, DBCollection.monthlyIncome)
   );
   const transactions: Transaction[] = [];
   querySnapshot.forEach((doc) => {

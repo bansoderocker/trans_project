@@ -22,13 +22,13 @@ import { saveAddEditTransaction } from "@/hook/walletTranscation/saveAddEditTran
 import { Transaction } from "@/interface/wallet";
 import { fetchTransactions } from "@/hook/walletTranscation/fetchTransaction";
 
-// const expenseTypes = ["Income", "Need", "Want", "Gift", "Bill", "Other"];
+// const IncomeTypes = ["Income", "Need", "Want", "Gift", "Bill", "Other"];
 const paymentModes = ["Kotak", "Amazon Pay", "Cash", "UPI", "Credit Card"];
 const creditTypes = ["Income", "Gift"];
 const debitTypes = ["Need", "Want", "Bill", "MF", "Other"];
 const defaultFormData = {
   paymentDate: new Date(),
-  expense: "",
+  income: "",
   type: "",
   amount: undefined,
   paymentMode: "",
@@ -79,13 +79,13 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
   //   }
   // }, [request]);
 
-  const [expenseTypes, setExpenseTypes] = useState<string[]>(debitTypes);
+  const [IncomeTypes, setIncomeTypes] = useState<string[]>(debitTypes);
 
   useEffect(() => {
     if (formData.transactionType === TransactionType.debit) {
-      setExpenseTypes(debitTypes);
+      setIncomeTypes(debitTypes);
     } else {
-      setExpenseTypes(creditTypes);
+      setIncomeTypes(creditTypes);
     }
   }, [formData?.transactionType]);
 
@@ -177,13 +177,13 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
             </Typography>
           </Box>
 
-          {/* Expense Description */}
+          {/* Income Description */}
           <Box>
             <TextField
-              label="Expense Description"
-              name="expense"
+              label="Income Description"
+              name="income"
               fullWidth
-              value={formData.expense}
+              value={formData.income}
               onChange={handleChange}
             />
           </Box>
@@ -226,17 +226,17 @@ export const AddEditTransaction = (props: AddEditTransactionProps) => {
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>
-          {/* Expense Type */}
+          {/* Income Type */}
           <Box>
             <TextField
-              label="Expense Type"
+              label="Income Type"
               name="type"
               select
               fullWidth
               value={formData.type}
               onChange={handleChange}
             >
-              {expenseTypes?.map((option) => (
+              {IncomeTypes?.map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
                 </MenuItem>

@@ -48,7 +48,7 @@ export const Transactions = (props: propTransaction) => {
       headerName: "Date",
       width: 150,
     },
-    { field: "expense", headerName: "Expense", width: 200 },
+    { field: "income", headerName: "Income", width: 200 },
     { field: "type", headerName: "Type", width: 150 },
     { field: "amount", headerName: "Amount", type: "number", width: 120 },
     { field: "paymentMode", headerName: "Payment Mode", width: 180 },
@@ -92,8 +92,10 @@ export const Transactions = (props: propTransaction) => {
             variant="contained"
             color="primary"
             size="large"
-            onClick={() => props?.setSelectedPage(2)}
-            //AddEditTransaction 2 - hardcorded
+            onClick={() => {
+              props.setFormData(undefined);
+              props.setSelectedPage(2);
+            }}
           >
             Add Transaction
           </Button>

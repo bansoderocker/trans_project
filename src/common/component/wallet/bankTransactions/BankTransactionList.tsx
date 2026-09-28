@@ -32,7 +32,7 @@ export default function BankTransactionList({
   const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string>();
-  const { entries } = useMasterData();
+  const { entries } = useMasterData(true);
   const nameById = useMemo(
     () => Object.fromEntries(entries.map((entry) => [entry.id, entry.name])),
     [entries],

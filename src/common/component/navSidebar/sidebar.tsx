@@ -11,7 +11,6 @@ import {
   Avatar,
 } from "@mui/material";
 import { auth, logout } from "@/config/firebase";
-import ExpenseDetailsPage from "@/pages/expense/ExpenseDetailsPage";
 import MasterForm from "@/pages/master/MasterEntryPage";
 import { getUserData } from "@/common/constant/constant";
 import { User } from "firebase/auth";
@@ -19,12 +18,14 @@ import { RightPanel } from "./RightPanel";
 import BillEntryPage from "@/pages/billEntry/_billEntryPage";
 import BillEntryList from "@/pages/billEntry/billEntryList";
 import BankTransactionList from "@/common/component/wallet/bankTransactions/BankTransactionList";
+import IncomeDetailsPage from "@/pages/income/IncomeDetailsPage";
+import { WalletDashboard } from "@/common/component/wallet/dashboard";
 
 const pageNames = [
   { name: "Bill" },
   { name: "Daily Entry" },
   { name: "Master" },
-  { name: "Expense" },
+  { name: "Income" },
   { name: "Wallet" },
   { name: "About" },
   { name: "Contact" },
@@ -94,11 +95,15 @@ export default function SideNavBar() {
       case 3:
         return (
           <RightPanel>
-            <ExpenseDetailsPage uid={userData?.uid ?? ""} />
+            <IncomeDetailsPage uid={userData?.uid ?? ""} />
           </RightPanel>
         );
       case 4:
-        return <RightPanel>Wallet</RightPanel>;
+        return (
+          <RightPanel>
+            <WalletDashboard />
+          </RightPanel>
+        );
       case 5:
         return <RightPanel>About</RightPanel>;
       case 6:

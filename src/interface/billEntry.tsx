@@ -14,8 +14,8 @@ export interface Bill {
   isTrash?: boolean;
 }
 
-export interface addEditExpenseDetails {
+export interface addEditIncomeDetails {
   id: number;
-  expenseType: string;
-  expenseValue: string | number;
+  IncomeType: string;
+  incomeValue: string | number;
 }

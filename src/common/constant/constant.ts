@@ -10,11 +10,11 @@ export const MAX_AMOUNT = 10000000; // 1 Crore
 //   { value: "party", label: "Party" },
 //   { value: "truck", label: "Truck" },
 //   { value: "location", label: "Location" },
-//   { value: "expenseType", label: "Expense Type" },
+//   { value: "IncomeType", label: "Income Type" },
 // ];
 
 export const DBCollection = {
-  monthlyExpense: "expenseTransaction",
+  monthlyIncome: "incomeTransaction",
 };
 
 export const vTransApiEndPoint = {
@@ -40,7 +40,7 @@ export enum MasterType {
   Party = "party",
   Truck = "truck",
   Location = "location",
-  ExpenseType = "expenseType",
+  IncomeType = "IncomeType",
   Proprietor = "proprietor",
 }
 
@@ -48,14 +48,14 @@ export const masterTypes = [
   { value: MasterType.Party, label: "Party" },
   { value: MasterType.Truck, label: "Truck" },
   { value: MasterType.Location, label: "Location" },
-  { value: MasterType.ExpenseType, label: "Expense Type" },
+  { value: MasterType.IncomeType, label: "Income Type" },
   { value: MasterType.Proprietor, label: "Proprietor" },
 ];
 
 export const dataBranch = {
   master: "wallet/masters",
   bill: "wallet/bills",
-  expense: "wallet/expenses",
+  income: "wallet/incomes",
   bankTransaction: "wallet/BankTransaction",
   user: "wallet/user",
 };

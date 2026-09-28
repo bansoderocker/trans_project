@@ -24,7 +24,7 @@ const masterTypes = [
   { value: "party", label: "Party" },
   { value: "truck", label: "Truck" },
   { value: "location", label: "Location" },
-  { value: "expenseType", label: "Expense Type" },
+  { value: "incomeType", label: "Income Type" },
   { value: "proprietor", label: "Proprietor" },
 ];
 
@@ -40,8 +40,9 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
 
   // const [entries, setEntries] = useState<MasterEntry[]>([]);
   const [masterRef, setMasterRef] = useState<DatabaseReference>();
+const [masterTrigger, setMasterTrigger] = useState(false);
 
-  const { entries, loading, refresh } = useMasterData();
+  const { entries, loading, refresh } = useMasterData(masterTrigger);
 
   useEffect(() => {
     const refPath = dataBranch.master;
@@ -136,7 +137,7 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
 
   const handleEdit = (entry: MasterEntry) => {
     setFormData({
-      name: capitalizeWords(entry.name),
+      name: entry.name,
       type: entry.type,
     });
 
@@ -161,7 +162,7 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
       party: true,
       truck: false,
       location: false,
-      expenseType: false,
+      IncomeType: false,
       proprietor: false,
     },
   );
@@ -207,7 +208,7 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  name: capitalizeWords(e.target.value),
+                  name: (e.target.value),
                 }))
               }
               required
@@ -292,7 +293,7 @@ function MasterEntryPage({ uid, title = "Master Manager" }: MasterFormProps) {
                         <td>
                           {label === "Truck"
                             ? allcapitalizeWords(entry.name)
-                            : capitalizeWords(entry.name)}
+                            : (entry.name)}
                         </td>
                         <td>
                           <button

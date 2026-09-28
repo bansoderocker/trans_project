@@ -28,7 +28,7 @@ const emptyForm = (): BankTransaction => ({
 });
 
 export default function BankTransactionForm({ transactionId, onBack }: Props) {
-  const { entries } = useMasterData();
+  const { entries } = useMasterData(true);
   const [form, setForm] = useState<BankTransaction>(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

@@ -30,65 +30,65 @@ import { Edit, Delete } from "@mui/icons-material";
 import ReactDatePicker from "react-datepicker";
 import { dataBranch } from "@/common/constant/constant";
 // import "react-datepicker/dist/react-datepicker.css";
-interface Expense {
+interface Income {
   id?: string;
   date: Date;
-  expense: string;
-  expenseType: string;
+  income: string;
+  incomeType: string;
   debitCredit: "Debit" | "Credit";
   paymentAmount: number;
   paymentMode: string;
 }
 
-function ExpenseDetailsPage({ uid }: { uid: string }) {
-  const [expenseDetails, setExpenseDetails] = useState<Expense>({
+function IncomeDetailsPage({ uid }: { uid: string }) {
+  const [incomeDetails, setIncomeDetails] = useState<Income>({
     date: new Date(),
-    expense: "",
-    expenseType: "",
+    income: "",
+    incomeType: "",
     debitCredit: "Debit",
     paymentAmount: 0,
     paymentMode: "",
   });
 
-  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [allIncomes, setAllIncomes] = useState<Income[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
-  const [refPath, setRefPath] = useState<string>(dataBranch.expense);
-  const [expenseRef, setExpenseRef] = useState<DatabaseReference>();
+  const [refPath, setRefPath] = useState<string>(dataBranch.income);
+  const [incomeRef, setIncomeRef] = useState<DatabaseReference>();
   useEffect(() => {
     if (typeof window !== "undefined" && uid) {
-      setRefPath(dataBranch.expense);
+      setRefPath(dataBranch.income);
     }
     if (!db) {
       console.error("Firebase database is not initialized.");
       return;
     }
-    setExpenseRef(ref(db, refPath));
+    setIncomeRef(ref(db, refPath));
   }, [uid, refPath]);
 
-  const fetchExpenses = async () => {
+  const fetchIncomes = async () => {
     try {
-      if (expenseRef) {
-        const snapshot = await get(expenseRef);
+      if (incomeRef) {
+        const snapshot = await get(incomeRef);
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const expensesArray = Object.keys(data).map((key) => ({
+          const incomesArray = Object.keys(data).map((key) => ({
             id: key,
             ...data[key],
           }));
-          setAllExpenses(expensesArray);
+          setAllIncomes(incomesArray);
         }
       }
     } catch (error) {
-      console.error("Error fetching expenses:", error);
+      console.error("Error fetching incomes:", error);
     }
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setExpenseDetails((prev) => ({ ...prev, [name]: value }));
+    setIncomeDetails((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleToggleChange = (
@@ -96,7 +96,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     _newValue: "Debit" | "Credit",
   ) => {
     if (_newValue !== null) {
-      setExpenseDetails((prev) => ({ ...prev, debitCredit: _newValue }));
+      setIncomeDetails((prev) => ({ ...prev, debitCredit: _newValue }));
     }
   };
 
@@ -107,19 +107,19 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     setSuccessMessage(null);
 
     try {
-      if (expenseRef) {
+      if (incomeRef) {
         if (editId) {
-          await update(ref(db, `${refPath}/${editId}`), expenseDetails);
-          setSuccessMessage("Expense updated successfully!");
+          await update(ref(db, `${refPath}/${editId}`), incomeDetails);
+          setSuccessMessage("Income updated successfully!");
         } else {
-          await push(expenseRef, expenseDetails);
-          setSuccessMessage("Expense added successfully!");
+          await push(incomeRef, incomeDetails);
+          setSuccessMessage("Income added successfully!");
         }
-        fetchExpenses();
-        setExpenseDetails({
+        fetchIncomes();
+        setIncomeDetails({
           date: new Date(),
-          expense: "",
-          expenseType: "",
+          income: "",
+          incomeType: "",
           debitCredit: "Debit",
           paymentAmount: 0,
           paymentMode: "",
@@ -127,30 +127,30 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
         setEditId(null);
       }
     } catch (e) {
-      setError("Error saving expense: " + e);
+      setError("Error saving income: " + e);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleEdit = (expense: Expense) => {
-    setExpenseDetails(expense);
-    setEditId(expense.id || null);
+  const handleEdit = (income: Income) => {
+    setIncomeDetails(income);
+    setEditId(income.id || null);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      if (expenseRef) {
+      if (incomeRef) {
         await remove(ref(db, `${refPath}/${id}`));
-        fetchExpenses();
-        setSuccessMessage("Expense deleted successfully!");
+        fetchIncomes();
+        setSuccessMessage("Income deleted successfully!");
       }
     } catch (error) {
-      setError("Error deleting expense: " + error);
+      setError("Error deleting income: " + error);
     }
   };
 
-  const totalExpense = allExpenses.reduce(
+  const totalIncome = allIncomes.reduce(
     (sum, item) => sum + Number(item.paymentAmount),
     0,
   );
@@ -167,15 +167,15 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
   // };
   return (
     <Container>
-      <Typography variant="h4">Expense Details</Typography>
+      <Typography variant="h4">Income Details</Typography>
       <form onSubmit={handleSubmit}>
         {/* <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <ReactDatePicker
-              selected={new Date(expenseDetails.date)} // Convert the date string to a Date object
+              selected={new Date(incomeDetails.date)} // Convert the date string to a Date object
               onChange={(date: Date | null) => {
                 const temoraryDate = date ? date : new Date();
-                setExpenseDetails((prev) => ({ ...prev, date: temoraryDate }));
+                setIncomeDetails((prev) => ({ ...prev, date: temoraryDate }));
               }}
               dateFormat="dd/MM/yyyy" // Display format
               popperClassName="datepicker-zindex" // Custom class for z-index
@@ -192,9 +192,9 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
-              label="Expense"
-              name="expense"
-              value={expenseDetails.expense}
+              label="Income"
+              name="income"
+              value={incomeDetails.income}
               onChange={handleInputChange}
               fullWidth
               required
@@ -202,9 +202,9 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
-              label="Expense Type"
-              name="expenseType"
-              value={expenseDetails.expenseType}
+              label="Income Type"
+              name="IncomeType"
+              value={incomeDetails.IncomeType}
               onChange={handleInputChange}
               fullWidth
               required
@@ -212,7 +212,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
           </Grid>
           <Grid item xs={12} md={4}>
             <ToggleButtonGroup
-              value={expenseDetails.debitCredit}
+              value={incomeDetails.debitCredit}
               exclusive
               onChange={handleToggleChange}
             >
@@ -225,7 +225,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
               label="Payment Amount"
               name="paymentAmount"
               type="number"
-              value={expenseDetails.paymentAmount}
+              value={incomeDetails.paymentAmount}
               onChange={handleInputChange}
               fullWidth
               required
@@ -235,7 +235,7 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
             <TextField
               label="Payment Mode"
               name="paymentMode"
-              value={expenseDetails.paymentMode}
+              value={incomeDetails.paymentMode}
               onChange={handleInputChange}
               fullWidth
               required
@@ -253,14 +253,14 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
       </form>
       {error && <Alert severity="error">{error}</Alert>}
       {successMessage && <Alert severity="success">{successMessage}</Alert>}
-      <Typography variant="h6">All Expense Details</Typography>
-      <Typography variant="h5">Total Expense: ₹{totalExpense}</Typography>
+      <Typography variant="h6">All Income Details</Typography>
+      <Typography variant="h5">Total Income: ₹{totalIncome}</Typography>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Date</TableCell>
-              <TableCell>Expense</TableCell>
+              <TableCell>Income</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Amount</TableCell>
               <TableCell>Payment Mode</TableCell>
@@ -268,21 +268,21 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {allExpenses.map((expense) => (
-              <TableRow key={expense.id}>
+            {allIncomes.map((income) => (
+              <TableRow key={income.id}>
                 <TableCell>
-                  {new Date(expense.date).toLocaleDateString()}
+                  {new Date(income.date).toLocaleDateString()}
                 </TableCell>
-                <TableCell>{expense.expense}</TableCell>
-                <TableCell>{expense.expenseType}</TableCell>
-                <TableCell>₹{expense.paymentAmount}</TableCell>
-                <TableCell>{expense.paymentMode}</TableCell>
+                <TableCell>{income.income}</TableCell>
+                <TableCell>{income.incomeType}</TableCell>
+                <TableCell>₹{income.paymentAmount}</TableCell>
+                <TableCell>{income.paymentMode}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleEdit(expense)}>
+                  <IconButton onClick={() => handleEdit(income)}>
                     <Edit />
                   </IconButton>
                   <IconButton
-                    onClick={() => handleDelete(expense.id!)}
+                    onClick={() => handleDelete(income.id!)}
                     color="error"
                   >
                     <Delete />
@@ -296,4 +296,4 @@ function ExpenseDetailsPage({ uid }: { uid: string }) {
     </Container>
   );
 }
-export default ExpenseDetailsPage;
+export default IncomeDetailsPage;

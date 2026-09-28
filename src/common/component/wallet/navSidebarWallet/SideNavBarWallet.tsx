@@ -16,9 +16,12 @@ import { getUserData, walletPageNames } from "@/common/constant/constant";
 import { RightPanel } from "./RightPanel";
 import { WalletDashboard } from "../dashboard";
 import { PageInProgress } from "../../pageInProgress";
+import { Transactions } from "../transactions";
+import { AddEditTransaction } from "../addEditTransaction";
 
 export default function SideNavBarWallet() {
   const [selectedPage, setSelectedPage] = useState<number>(0);
+  const [selectedData, setSelectedData] = useState<string | number | undefined>();
   const [userData, setUserData] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Sidebar open by default on desktop
 
@@ -37,13 +40,9 @@ export default function SideNavBarWallet() {
     return () => unsubscribe();
   }, []);
   const handlePageChange = (index: number) => {
-    if (selectedPage !== index) {
-      setSelectedPage(index);
-      setIsMenuOpen(false); // Close sidebar on selection
-    }
+    setSelectedPage(index);
+    setIsMenuOpen(false);
   };
-
-  // const [selectedData, setSelectedData] = useState<string | number>();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column" }}>
@@ -106,20 +105,23 @@ export default function SideNavBarWallet() {
                   <WalletDashboard />
                 </RightPanel>
               );
-            // case 1:
-            //   return (
-            //     <RightPanel>
-            //       <Transactions
-            //         setSelectedPage={setSelectedPage}
-            //         setFormData={setSelectedData}
-            //       />
-            //     </RightPanel>
-            //   );
+            case 1:
+              return (
+                <RightPanel>
+                  <Transactions
+                    setSelectedPage={setSelectedPage}
+                    setFormData={setSelectedData}
+                  />
+                </RightPanel>
+              );
             case 2:
               return (
                 <RightPanel>
-                  <h1>CASE 2</h1>
-                  {/* <AddEditTransaction editFormDataId={selectedData} /> */}
+                  <AddEditTransaction
+                    editFormDataId={
+                      typeof selectedData === "string" ? selectedData : undefined
+                    }
+                  />
                 </RightPanel>
               );
 
